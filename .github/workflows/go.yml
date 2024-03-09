@@ -1,0 +1,46 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  workflow_dispatch:
+    inputs:
+      Version:
+        description: 'JAMCAT-MACH Version'     
+        required: true
+        default: 'dev' 
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version-file: './go.mod'
+
+    - name: Set up MinGW
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+    - name: Set up JAMCAT-MACH
+      run: go mod tidy
+      
+    - name: Build JAMCAT-MACH
+      run: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC="x86_64-w64-mingw32-gcc" go build -ldflags="-X 'main.Version=${{ github.event.inputs.Version }}'" -o JAMCAT-MACH-${{ github.event.inputs.Version }}.exe -v ./...
+
+    - name: Create new Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run:
+        gh release create ${{ github.event.inputs.Version }} --target main 
+    
+    - name: Upload Release Asset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run:
+        gh release upload ${{ github.event.inputs.Version }} JAMCAT-MACH-${{ github.event.inputs.Version }}.exe
