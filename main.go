@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"time"
 )
 
 var Version = "dev"
@@ -47,18 +45,11 @@ Splash 1, angels 0. Means player died, and the program is now expecting VTOL VR 
 
 `)
 
-	bkpPlayerMp3()
-	InitMP3()
-
 	go readLog()
-	fmt.Println("JAMCAT-MACH is now listening to log events.")
-
-	wait := gracefulShutdown(context.Background(), 2*time.Second, map[string]operation{
-		"revertBkp": func(ctx context.Context) error {
-			revertBkp()
-			return nil
-		},
-	})
 
 	<-wait
+
+	fmt.Println("JAMCAT-MACH is now listening to log events.")
 }
+
+var wait = make(chan bool)

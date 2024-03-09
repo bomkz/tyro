@@ -1,3 +1,6 @@
 
 *.exe
 *.sum
+*.json
+*.tmp
+*.old
