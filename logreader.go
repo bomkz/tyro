@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/dlclark/regexp2"
 	"github.com/google/uuid"
 )
 
@@ -98,8 +100,7 @@ func onLobbyJoin() {
 
 		}
 		switch {
-		case strings.Contains(currentMessage, "- Slot designation for "):
-			currentLobby = onSlotDefine(currentMessage, currentLobby)
+
 		case strings.Contains(currentMessage, "- Info:"):
 			currentLobby = onNewPlayer(currentMessage, currentLobby)
 			currentLobby = onPlayerUpdate(currentLobby)
@@ -115,26 +116,26 @@ func onLobbyJoin() {
 			currentLobby = onEnvDeath(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, " was killed by") && strings.Contains(currentMessage, "Lobby message from") && !strings.Contains(currentMessage, "environment") && (strings.Contains(currentMessage, "$log_EF-24G") || strings.Contains(currentMessage, "$log_T-55")):
 			currentLobby = onEnvDeathMC(currentMessage, currentLobby)
+		case strings.Contains(currentMessage, "identity updated: "):
+			currentLobby = onIdentityUpdate(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "OnBriefingSeatUpdated("):
 			currentLobby = onBriefingSeatUpdated(currentMessage, currentLobby)
-		case strings.Contains(currentMessage, "Setting up slot UI: "):
-			currentLobby = onSlotUISetup(currentMessage, currentLobby)
 		case currentMessage == "LeaveLobby()":
 			InLobby = false
 			currentLobby.Lobby.LeaveTime = time.Now()
 
-			for x, y := range LobbyHistory {
-				if y.Lobby.ID == currentLobby.Lobby.ID {
-					LobbyHistory[x] = currentLobby
+			for _, x := range LobbyHistory {
+				if x.Lobby.ID == currentLobby.Lobby.ID {
+					x = currentLobby
 					done <- true
 					return
 				}
 			}
 		}
 
-		for x, y := range LobbyHistory {
-			if y.Lobby.ID == currentLobby.Lobby.ID {
-				LobbyHistory[x] = currentLobby
+		for _, x := range LobbyHistory {
+			if x.Lobby.ID == currentLobby.Lobby.ID {
+				x = currentLobby
 			}
 		}
 		done <- true
@@ -143,6 +144,12 @@ func onLobbyJoin() {
 
 }
 
+/*
+* Function called to handle multicrew player deaths against environment.
+* Environment counts as AI, or controlled flight into terrain.
+* TODO: tidy up this function and replace spaghetti code with RegEx.
+* TODO: capture string examples using breaker point.
+ */
 func onEnvDeathMC(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var newDeath DeathStruct
 	_, trimmedMessage, _ := strings.Cut(currentMessage, "(")
@@ -156,20 +163,38 @@ func onEnvDeathMC(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	newDeath.KilledBy, _ = strings.CutSuffix(trimmedMessage, ".")
 	newDeath.KilledBy = "(" + newDeath.KilledBy
 	newDeath.KilledByName = "<Environment>"
-	for x, y := range currentLobby.Players {
-		if (y.Name == tmpname1 || y.Name == tmpname2) && y.Active {
-			newDeath.UserTeam = y.Team
-			newDeath.DiedWith = y.Aircraft
+
+	// Fill in missing death information using currentLobby.Players information
+	for _, x := range currentLobby.Players {
+		// If x.Name matches either of tmpname1 or tmpname2, and x.Active is true, then.
+		if (x.Name == tmpname1 || x.Name == tmpname2) && x.Active {
+
+			//  Fill in missing information using x
+			newDeath.UserTeam = x.Team
+			newDeath.DiedWith = x.Aircraft
+
+			// Set killer team as environment (i.e. AI killed user.)
 			newDeath.PlayerTeam = "<environment>"
+
+			// Set time of death as time.Now()
 			newDeath.Time = time.Now()
-			currentLobby.Players[x].Deaths = append(currentLobby.Players[x].Deaths, newDeath)
-			currentLobby.Players[x].DeathCount += 1
+
+			// Append death to death array, and increase player death count.
+			x.Deaths = append(x.Deaths, newDeath)
+			x.DeathCount += 1
 		}
 	}
 
+	// return currentLobby to main function.
 	return currentLobby
 }
 
+/*
+*	Function called to handle player deaths against environment.
+*	Environment counts as AI, or controlled flight into terrain.
+* 	TODO: tidy up function and replace spaghetti code with RegEx.
+*	TODO: capture string examples by using breakpoints.
+ */
 func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var newDeath DeathStruct
 	_, trimmedMessage, _ := strings.Cut(currentMessage, "$log_")
@@ -178,14 +203,14 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	newDeath.KilledBy, _ = strings.CutSuffix(trimmedMessage, ".")
 	newDeath.KilledBy = "(" + newDeath.KilledBy
 	newDeath.KilledByName = "<Environment>"
-	for x, y := range currentLobby.Players {
-		if y.Name == name && y.Active {
-			newDeath.UserTeam = y.Team
-			newDeath.DiedWith = y.Aircraft
+	for _, x := range currentLobby.Players {
+		if x.Name == name && x.Active {
+			newDeath.UserTeam = x.Team
+			newDeath.DiedWith = x.Aircraft
 			newDeath.PlayerTeam = "<environment>"
 			newDeath.Time = time.Now()
-			currentLobby.Players[x].Deaths = append(currentLobby.Players[x].Deaths, newDeath)
-			currentLobby.Players[x].DeathCount += 1
+			x.Deaths = append(x.Deaths, newDeath)
+			x.DeathCount += 1
 		}
 	}
 
@@ -193,74 +218,166 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 
 }
 
-func onSlotDefine(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
-	slot := strings.TrimPrefix(currentMessage, "- Slot designation for ")
-	var newSlot SlotDefineStruct
-	newSlot.Team, slot, _ = strings.Cut(slot, ".")
-	tmpdata, slot, _ := strings.Cut(slot, "[id=")
-	if tmpdata == "0" {
-		newSlot.Copilot = true
+/*
+*	Track identity updates by matching examples with RegEx, and update player's current aircraft.
+*	TODO: Test function in both single crew and multicrew aircraft.
+*	TODO: Obtain proper multicrew string example.
+ */
+func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+	// Look for matching aircraft in current message string, value returns as string and...
+	newAircraft, found := matchAircraft(currentMessage)
+	// If not found, return current lobby to main function.
+	if !found {
+		return currentLobby
 	}
-	newSlot.ID, slot, _ = strings.Cut(slot, "] (")
-	newSlot.Aircraft = strings.TrimSuffix(slot, ")")
-
-	if newSlot.ID == "0" {
-		newSlot.Aircraft = "Invalid"
-		newSlot.Copilot = false
+	// Look for pilot(s) username in current message, value returns as []string and...
+	newCrew, found := matchUsername(currentMessage)
+	// If none are found, return currentLobby to main function.
+	if !found {
+		return currentLobby
 	}
 
-	newSlot.ID = fmt.Sprint(len(currentLobby.Slots))
-
-	currentLobby.Slots = append(currentLobby.Slots, newSlot)
-
-	return currentLobby
-}
-
-func onSlotUISetup(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
-	slot := strings.TrimPrefix(currentMessage, "Setting up slot UI: ")
-	team, slot, _ := strings.Cut(slot, " ")
-	id, slot, _ := strings.Cut(slot, " ")
-	_, name, _ := strings.Cut(slot, ") = ")
-
-	var aircraft string
-	var copilot bool
-	for _, x := range currentLobby.Slots {
-		if x.Team == team && x.ID == id {
-			aircraft = x.Aircraft
-			copilot = x.Copilot
+	// Range over newCrew []string and...
+	for _, x := range newCrew {
+		// Range over currentLobby.Players []LobbyPlayerStruct and...
+		for _, y := range currentLobby.Players {
+			// If current currentLobby.Players.Name index matches current newCrew.Name index,
+			// and current currentLobby.Players.Active equals true, then...
+			if y.Name == x && y.Active {
+				// current currentLobby.Players.Aircraft index equals newAircraft
+				y.Aircraft = newAircraft
+			}
 		}
 	}
 
-	for x, y := range currentLobby.Players {
-		if y.Name == name && y.Active {
-			currentLobby.Players[x].Aircraft = aircraft
-			currentLobby.Players[x].Copilot = copilot
-		}
-	}
-
+	// return currentLobby to main function
 	return currentLobby
 }
 
+// matchUsername matches a pilot(s) usernames using RegEx from a given string of type 'identity updated'.
+// If any amount of matches are found, then return matchesFound are returned, and found is set to true.
+// If no matches are found then matchesFound is set to nil, and found is set to false.
+func matchUsername(currentMessage string) (matchesFound []string, found bool) {
+
+	// Compile the regular expression
+	re := regexp2.MustCompile(crewRegex, regexp2.DefaultUnmarshalOptions)
+
+	// Find all matches in the string
+	match, err := re.FindStringMatch(currentMessage)
+	if err != nil {
+		return
+	}
+	var matches []string
+	for _, x := range match.Captures {
+		matches = append(matches, x.String())
+	}
+
+	// Get the rightmost match (last element in the slice)
+	if len(matches) > 0 {
+		rightmostMatch := matches[len(matches)-1]
+		fmt.Println("Rightmost match:", rightmostMatch)
+		// Check if multiple pilots are in the match
+		crew1, crew2, found := strings.Cut(rightmostMatch, ", ")
+		// If only one pilot is found, then...
+		if !found {
+			// Return single pilot as []string
+			return []string{rightmostMatch}, true
+		} else
+		// Else if multiple pilots found,
+		{
+			// Return pilots as []string
+			return []string{crew1, crew2}, true
+		}
+	} else
+	// If no matches found, then...
+	{
+		fmt.Println("No matches found.")
+		// return []string as nil, and return bool as false to signal no match found.
+		return nil, false
+	}
+}
+
+/*
+*	matchAircraft matches an aircraft name using RegEx from a given string of type 'identity updated'.
+*	If a match is found, then return matchFound is returned, and found is set to true.
+*	If no match is found then matchFound is set to "", and found is set to false.
+ */
+func matchAircraft(currentMessage string) (matchFound string, found bool) {
+	// Compile the regular expression.
+	re := regexp.MustCompile(craftRegex)
+
+	// Find all matches in the string.
+	matches := re.FindAllString(currentMessage, -1)
+
+	// Get the rightmost match (last element in the slice), and...
+	if len(matches) > 0 {
+		rightmostMatch := matches[len(matches)-1]
+		fmt.Println("Rightmost match:", rightmostMatch)
+		// Return match, and set found to true.
+		return rightmostMatch, true
+	} else
+	// If no matches are found, then...
+	{
+		// Return "", and set found to false.
+		fmt.Println("No matches found.")
+		return "", false
+	}
+}
+
+/*
+*	matchID64 matches all 17 digit numbers in a string,
+*	which is the exact length of SteamID64 numbers, using RegEx.
+ */
+func matchID64(currentMessage string) (matchesFound []string, found bool) {
+
+	// Compile the regular expression
+	re := regexp2.MustCompile(id64RegEx, regexp2.DefaultUnmarshalOptions)
+
+	// Find all matches in the string
+	match, err := re.FindStringMatch(currentMessage)
+	if err != nil {
+		return nil, false
+	}
+	var matches []string
+
+	// If no matches found, then...
+	if len(match.Captures) == 0 {
+		// Return nil slice, and set found to false
+		return nil, false
+	}
+	for _, x := range match.Captures {
+		matches = append(matches, x.String())
+	}
+
+	return matches, true
+
+}
+
+/*
+*	onBriefingSeatUpdated is called whenever a briefing seat is updated.
+*	Checks if a player changed teams, and creates new player with said team on array if not exists.
+*	TODO: Replace function with one that uses string of type "Setting up slot UI" using RegEx.
+ */
 func onBriefingSeatUpdated(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	trimmedMessage, _ := strings.CutPrefix(currentMessage, "BriefingAvatarSync OnBriefingSeatUpdated(")
 	ID, trimmedMessage, _ := strings.Cut(trimmedMessage, ", ")
-	for x, y := range currentLobby.Players {
+	for _, x := range currentLobby.Players {
 
 		switch {
-		case y.ID64 == ID && strings.Contains(trimmedMessage, "Allied") && y.Team == "Enemy":
+		case x.ID64 == ID && strings.Contains(trimmedMessage, "Allied") && x.Team == "Enemy":
 			var playerExist bool
-			for u, z := range currentLobby.Players {
+			for _, z := range currentLobby.Players {
 				if z.ID64 == ID && z.Team == "Allied" {
-					currentLobby.Players[x].Active = false
-					currentLobby.Players[u].Active = true
+					x.Active = false
+					z.Active = true
 					playerExist = true
 				}
 			}
-			currentLobby.Players[x].Active = false
+			x.Active = false
 			if !playerExist {
 				newPlayer := LobbyPlayerStruct{
-					ID64:     y.ID64,
-					Name:     y.Name,
+					ID64:     x.ID64,
+					Name:     x.Name,
 					JoinedAt: time.Now(),
 					Team:     "Allied",
 					Active:   true,
@@ -268,20 +385,20 @@ func onBriefingSeatUpdated(currentMessage string, currentLobby LobbyStruct) Lobb
 				currentLobby.Players = append(currentLobby.Players, newPlayer)
 
 			}
-		case y.ID64 == ID && strings.Contains(trimmedMessage, "Enemy") && y.Team == "Allied":
+		case x.ID64 == ID && strings.Contains(trimmedMessage, "Enemy") && x.Team == "Allied":
 			var playerExist bool
-			for u, z := range currentLobby.Players {
-				if z.ID64 == ID && z.Team == "Enemy" {
-					currentLobby.Players[x].Active = false
-					currentLobby.Players[u].Active = true
+			for _, y := range currentLobby.Players {
+				if y.ID64 == ID && y.Team == "Enemy" {
+					x.Active = false
+					y.Active = true
 					playerExist = true
 				}
 			}
-			currentLobby.Players[x].Active = false
+			x.Active = false
 			if !playerExist {
 				newPlayer := LobbyPlayerStruct{
-					ID64:     y.ID64,
-					Name:     y.Name,
+					ID64:     x.ID64,
+					Name:     x.Name,
 					JoinedAt: time.Now(),
 					Team:     "Enemy",
 					Active:   true,
@@ -294,17 +411,29 @@ func onBriefingSeatUpdated(currentMessage string, currentLobby LobbyStruct) Lobb
 	}
 	return currentLobby
 }
+
+/*
+* 	onPlayerLeave is called everytime a player leaves, and sets the leave time to time.Now()
+*	TODO: Replace spaghetti code with RegEx
+*	TODO: Obtain string sample
+ */
 func onPlayerLeave(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	trimmedMessage, _ := strings.CutPrefix(currentMessage, "FlightLogger: ")
 	name, _ := strings.CutSuffix(trimmedMessage, " has disconnected.")
-	for x, y := range currentLobby.Players {
-		if y.Name == name && y.LeftAt.IsZero() {
-			currentLobby.Players[x].LeftAt = time.Now()
+	for _, x := range currentLobby.Players {
+		if x.Name == name && x.LeftAt.IsZero() {
+			x.LeftAt = time.Now()
 		}
 	}
 	return currentLobby
 }
 
+/*
+*	onNewPlayer is called everytime a player joins, then calls unwrapInfo to figure out if player is new,
+*	or player rejoined lobby, and act accordingly
+*	TODO: Replace spaghetti code with RegEx.
+*	TODO: Obtain string sample
+ */
 func onNewPlayer(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	newPlayer := unwrapInfo(strings.TrimPrefix(currentMessage, "- Info: "))
 	foundPlayer := false
@@ -319,12 +448,23 @@ func onNewPlayer(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	}
 	return currentLobby
 }
+
+/*
+* onBeginObjective is called everytime a new objective is beginned, and adds onto the lobby objective counter.
+ */
 func onBeginObjective(_ string, currentLobby LobbyStruct) LobbyStruct {
+	// appends new objective with id equal to the length of the amount of current lobby objectives.
 	currentLobby.Lobby.Objectives = append(currentLobby.Lobby.Objectives, ObjectiveStruct{
 		ID: len(currentLobby.Lobby.Objectives),
 	})
 	return currentLobby
 }
+
+/*
+*	onCompleteObjective is called everytime an objective is completed, and adds onto the lobby objective counter.
+*	TODO: replace logic with RegEx.
+*	TODO: Obtain string sample
+ */
 func onCompleteObjective(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 
 	_, cutString, _ := strings.Cut(currentMessage, "RPC_CompleteObjective")
@@ -340,6 +480,10 @@ func onCompleteObjective(currentMessage string, currentLobby LobbyStruct) LobbyS
 
 var done = make(chan bool)
 
+/*
+*	preLobbyHandler handles the prelobby joining mechanism, and fills in information about the lobby,
+*	into the array that will be needed later once joined and in game
+ */
 func preLobbyHandler(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	switch {
 	case strings.Contains(currentMessage, "Attempting to join lobby"):
@@ -365,6 +509,12 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct) LobbyStruc
 	}
 	return currentLobby
 }
+
+/*
+*	unwrapInfo extracts player info from strings of type " - info"
+*	TODO: Replace spaghetti code with RegEx.
+*	TODO: Obtain string sample
+ */
 func unwrapInfo(currentMessage string) LobbyPlayerStruct {
 	var player LobbyPlayerStruct
 	var err error
@@ -390,6 +540,12 @@ func unwrapInfo(currentMessage string) LobbyPlayerStruct {
 	return player
 }
 
+/*
+*	onKill is called everytime a player kills something or someone,
+*	and unwraps the information to save into an array.
+*	TODO: Replace spaghetti code with RegEx.
+*	TODO: Obtain string sample
+ */
 func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var trimmedMessage string
 	var killer string
@@ -432,14 +588,14 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	}
 	var aircraft string
 	var killerid string
-	for x, y := range currentLobby.Players {
-		if y.Name == killer && y.Active {
-			currentLobby.Players[x].KillCount += 1
-			aircraft = y.Aircraft
-			newKill.UserTeam = y.Team
-			killerid = y.ID64
-			newKill.Copilot = y.Copilot
-			currentLobby.Players[x].Kills = append(currentLobby.Players[x].Kills, newKill)
+	for _, x := range currentLobby.Players {
+		if x.Name == killer && x.Active {
+			x.KillCount += 1
+			aircraft = x.Aircraft
+			newKill.UserTeam = x.Team
+			killerid = x.ID64
+			newKill.Copilot = x.Copilot
+			x.Kills = append(x.Kills, newKill)
 		}
 	}
 
@@ -453,11 +609,11 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			PlayerTeam:   newKill.UserTeam,
 			UserTeam:     newKill.PlayerTeam,
 		}
-		for x, y := range currentLobby.Players {
+		for _, x := range currentLobby.Players {
 			for _, h := range killedName {
-				if y.Name == h && y.Active {
-					currentLobby.Players[x].DeathCount += 1
-					currentLobby.Players[x].Deaths = append(currentLobby.Players[x].Deaths, newDeath)
+				if x.Name == h && x.Active {
+					x.DeathCount += 1
+					x.Deaths = append(x.Deaths, newDeath)
 
 				}
 			}
