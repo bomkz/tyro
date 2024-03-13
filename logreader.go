@@ -44,7 +44,6 @@ func readLog() {
 		for y, x := range logLinesTmp {
 			if y > (len(logLines) - 1) {
 				if readlog {
-					fmt.Println(y)
 					// Handles new log lines.
 					logHandler(x)
 				}
@@ -64,13 +63,11 @@ func logHandler(newline string) bool {
 
 		go onLobbyJoin()
 		InLobby = true
-		fmt.Println("bwehhhh")
 		Message <- newline
 		<-done
 
 	} else if InLobby {
 		Message <- newline
-		fmt.Println("bwahhhh")
 		<-done
 	}
 	return true
@@ -100,7 +97,8 @@ func onLobbyJoin() {
 
 		}
 		switch {
-
+		case strings.Contains(currentMessage, "Setting up slot UI: "):
+			currentLobby = onSlotUISetup(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "- Info:"):
 			currentLobby = onNewPlayer(currentMessage, currentLobby)
 			currentLobby = onPlayerUpdate(currentLobby)
@@ -112,14 +110,12 @@ func onLobbyJoin() {
 			currentLobby = onPlayerLeave(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "Lobby message from ") && strings.Contains(currentMessage, " killed ") && !strings.Contains(currentMessage, " was killed by "):
 			currentLobby = onKill(currentMessage, currentLobby)
-		case strings.Contains(currentMessage, " was killed by") && strings.Contains(currentMessage, "Lobby message from") && !strings.Contains(currentMessage, "environment") && !strings.Contains(currentMessage, "$log_EF-24G") && !strings.Contains(currentMessage, "$log_T-55"):
+		case strings.Contains(currentMessage, " was killed by") && strings.Contains(currentMessage, "Lobby message from") && !strings.Contains(currentMessage, "environment") && !strings.Contains(currentMessage, "$log_EF-24G") && !strings.Contains(currentMessage, "$log_T-55") && !strings.Contains(currentMessage, "$log_AH-94"):
 			currentLobby = onEnvDeath(currentMessage, currentLobby)
-		case strings.Contains(currentMessage, " was killed by") && strings.Contains(currentMessage, "Lobby message from") && !strings.Contains(currentMessage, "environment") && (strings.Contains(currentMessage, "$log_EF-24G") || strings.Contains(currentMessage, "$log_T-55")):
+		case strings.Contains(currentMessage, " was killed by") && strings.Contains(currentMessage, "Lobby message from") && !strings.Contains(currentMessage, "environment") && (strings.Contains(currentMessage, "$log_EF-24G") || strings.Contains(currentMessage, "$log_T-55")) || strings.Contains(currentMessage, "$log_AH-94"):
 			currentLobby = onEnvDeathMC(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "identity updated: "):
 			currentLobby = onIdentityUpdate(currentMessage, currentLobby)
-		case strings.Contains(currentMessage, "OnBriefingSeatUpdated("):
-			currentLobby = onBriefingSeatUpdated(currentMessage, currentLobby)
 		case currentMessage == "LeaveLobby()":
 			InLobby = false
 			currentLobby.Lobby.LeaveTime = time.Now()
@@ -203,14 +199,14 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	newDeath.KilledBy, _ = strings.CutSuffix(trimmedMessage, ".")
 	newDeath.KilledBy = "(" + newDeath.KilledBy
 	newDeath.KilledByName = "<Environment>"
-	for _, x := range currentLobby.Players {
-		if x.Name == name && x.Active {
-			newDeath.UserTeam = x.Team
-			newDeath.DiedWith = x.Aircraft
+	for x, y := range currentLobby.Players {
+		if y.Name == name && y.Active {
+			newDeath.UserTeam = y.Team
+			newDeath.DiedWith = y.Aircraft
 			newDeath.PlayerTeam = "<environment>"
 			newDeath.Time = time.Now()
-			x.Deaths = append(x.Deaths, newDeath)
-			x.DeathCount += 1
+			currentLobby.Players[x].Deaths = append(currentLobby.Players[x].Deaths, newDeath)
+			currentLobby.Players[x].DeathCount += 1
 		}
 	}
 
@@ -224,6 +220,7 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 *	TODO: Obtain proper multicrew string example.
  */
 func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+
 	// Look for matching aircraft in current message string, value returns as string and...
 	newAircraft, found := matchAircraft(currentMessage)
 	// If not found, return current lobby to main function.
@@ -254,9 +251,11 @@ func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStru
 	return currentLobby
 }
 
-// matchUsername matches a pilot(s) usernames using RegEx from a given string of type 'identity updated'.
-// If any amount of matches are found, then return matchesFound are returned, and found is set to true.
-// If no matches are found then matchesFound is set to nil, and found is set to false.
+/*
+*	matchUsername matches a pilot(s) usernames using RegEx from a given string of type 'identity updated'.
+*   If any amount of matches are found, then return matchesFound are returned, and found is set to true.
+*	If no matches are found then matchesFound is set to nil, and found is set to false.
+ */
 func matchUsername(currentMessage string) (matchesFound []string, found bool) {
 
 	// Compile the regular expression
@@ -265,7 +264,9 @@ func matchUsername(currentMessage string) (matchesFound []string, found bool) {
 	// Find all matches in the string
 	match, err := re.FindStringMatch(currentMessage)
 	if err != nil {
-		return
+		return nil, false
+	} else if match == nil {
+		return nil, false
 	}
 	var matches []string
 	for _, x := range match.Captures {
@@ -273,25 +274,27 @@ func matchUsername(currentMessage string) (matchesFound []string, found bool) {
 	}
 
 	// Get the rightmost match (last element in the slice)
-	if len(matches) > 0 {
+	if matches != nil {
 		rightmostMatch := matches[len(matches)-1]
-		fmt.Println("Rightmost match:", rightmostMatch)
+
 		// Check if multiple pilots are in the match
 		crew1, crew2, found := strings.Cut(rightmostMatch, ", ")
 		// If only one pilot is found, then...
 		if !found {
+
 			// Return single pilot as []string
 			return []string{rightmostMatch}, true
 		} else
 		// Else if multiple pilots found,
 		{
+
 			// Return pilots as []string
 			return []string{crew1, crew2}, true
 		}
 	} else
 	// If no matches found, then...
 	{
-		fmt.Println("No matches found.")
+
 		// return []string as nil, and return bool as false to signal no match found.
 		return nil, false
 	}
@@ -312,14 +315,15 @@ func matchAircraft(currentMessage string) (matchFound string, found bool) {
 	// Get the rightmost match (last element in the slice), and...
 	if len(matches) > 0 {
 		rightmostMatch := matches[len(matches)-1]
-		fmt.Println("Rightmost match:", rightmostMatch)
+
 		// Return match, and set found to true.
+
 		return rightmostMatch, true
 	} else
 	// If no matches are found, then...
 	{
 		// Return "", and set found to false.
-		fmt.Println("No matches found.")
+
 		return "", false
 	}
 }
@@ -341,7 +345,7 @@ func matchID64(currentMessage string) (matchesFound []string, found bool) {
 	var matches []string
 
 	// If no matches found, then...
-	if len(match.Captures) == 0 {
+	if match == nil {
 		// Return nil slice, and set found to false
 		return nil, false
 	}
@@ -350,65 +354,93 @@ func matchID64(currentMessage string) (matchesFound []string, found bool) {
 	}
 
 	return matches, true
-
 }
 
 /*
-*	onBriefingSeatUpdated is called whenever a briefing seat is updated.
-*	Checks if a player changed teams, and creates new player with said team on array if not exists.
-*	TODO: Replace function with one that uses string of type "Setting up slot UI" using RegEx.
+*	onSlotUISetup is called whenever a slot is updated.
+*	Checks if a player changed teams, and calls on a function that
+*	creates new player with said team on array if not exists.
  */
-func onBriefingSeatUpdated(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
-	trimmedMessage, _ := strings.CutPrefix(currentMessage, "BriefingAvatarSync OnBriefingSeatUpdated(")
-	ID, trimmedMessage, _ := strings.Cut(trimmedMessage, ", ")
-	for _, x := range currentLobby.Players {
+func onSlotUISetup(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 
-		switch {
-		case x.ID64 == ID && strings.Contains(trimmedMessage, "Allied") && x.Team == "Enemy":
-			var playerExist bool
-			for _, z := range currentLobby.Players {
-				if z.ID64 == ID && z.Team == "Allied" {
-					x.Active = false
-					z.Active = true
-					playerExist = true
-				}
-			}
-			x.Active = false
-			if !playerExist {
-				newPlayer := LobbyPlayerStruct{
-					ID64:     x.ID64,
-					Name:     x.Name,
-					JoinedAt: time.Now(),
-					Team:     "Allied",
-					Active:   true,
-				}
-				currentLobby.Players = append(currentLobby.Players, newPlayer)
+	player, found := matchUsername(currentMessage)
+	if !found {
+		return currentLobby
+	}
 
-			}
-		case x.ID64 == ID && strings.Contains(trimmedMessage, "Enemy") && x.Team == "Allied":
-			var playerExist bool
-			for _, y := range currentLobby.Players {
-				if y.ID64 == ID && y.Team == "Enemy" {
-					x.Active = false
-					y.Active = true
-					playerExist = true
-				}
-			}
-			x.Active = false
-			if !playerExist {
-				newPlayer := LobbyPlayerStruct{
-					ID64:     x.ID64,
-					Name:     x.Name,
-					JoinedAt: time.Now(),
-					Team:     "Enemy",
-					Active:   true,
-				}
-				currentLobby.Players = append(currentLobby.Players, newPlayer)
+	var team string
 
+	if strings.Contains(currentMessage, "Allied") {
+		team = "Allied"
+
+	} else if strings.Contains(currentMessage, "Enemy") {
+		team = "Enemy"
+	}
+
+	for _, x := range player {
+		for _, y := range currentLobby.Players {
+			if y.Name == x && y.Active && y.Team != team {
+				currentLobby = switchPlayerTeam(y, currentLobby)
+				break
 			}
 		}
-
 	}
+
+	return currentLobby
+}
+
+/*
+*	switchPlayerTeam is called upon when a function need a player's team swapped,
+*	and creates new player with said team on array if not exists.
+ */
+func switchPlayerTeam(player LobbyPlayerStruct, currentLobby LobbyStruct) LobbyStruct {
+	var found bool
+
+	// Set old player as inactive.
+	for _, x := range currentLobby.Players {
+		if x.ID64 == player.ID64 && x.Active && x.Team == player.Team {
+			x.Active = false
+		}
+	}
+
+	//	Checks whether inactive player with certain ID64 exists, and...
+	for _, x := range currentLobby.Players {
+		if x.ID64 == player.ID64 && !x.Active && x.Team != player.Team {
+			// If exists, set found to true, then..
+			found = true
+		}
+	}
+
+	// If opposite team player found, do, otherwise do...
+	if found {
+		for _, x := range currentLobby.Players {
+			if x.ID64 == player.ID64 && x.Active && x.Team == player.Team {
+				// Set old player as inactive
+				x.Active = false
+			} else if x.ID64 == player.ID64 && !x.Active && x.Team != player.Team {
+				// Set new player as active
+				x.Active = true
+			}
+		}
+	} else {
+		// Create new active player
+		newPlayer := LobbyPlayerStruct{
+			Name:     player.Name,
+			ID64:     player.ID64,
+			JoinedAt: time.Now(),
+			Active:   true,
+		}
+		// Set proper team
+		if player.Team == "Allied" {
+			newPlayer.Team = "Enemy"
+		} else {
+			newPlayer.Team = "Allied"
+		}
+		// Append to currentLobby array and...
+		currentLobby.Players = append(currentLobby.Players, newPlayer)
+	}
+
+	// Return updated lobby to calling function.
 	return currentLobby
 }
 
