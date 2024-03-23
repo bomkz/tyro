@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -223,9 +222,6 @@ func onPlayerLeave(currentMessage string, currentLobby LobbyStruct) LobbyStruct 
 }
 
 func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
-	if strings.Contains(currentMessage, "Autumn") {
-		fmt.Println("bewop")
-	}
 
 	leftside, rightside, found := strings.Cut(currentMessage, "(")
 	if !found {
@@ -280,9 +276,7 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	for x, y := range currentLobby.Players {
 		if y.Name == username && y.Active && aircraft != "" && !multicrew {
 			currentLobby.Players[x].Aircraft = aircraft
-			if username == "Autumn" {
-				fmt.Println(aircraft)
-			}
+
 		}
 	}
 	return currentLobby
