@@ -115,6 +115,7 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
 		newPlayer := createPlayer(currentPilot, "")
 		currentLobby.Players = append(currentLobby.Players, newPlayer)
+		currentLobby.Lobby.JoinTime = time.Now()
 
 		currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name
 	case strings.Contains(currentMessage, "Attempting to join lobby"):

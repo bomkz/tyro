@@ -50,6 +50,10 @@ This file is filled with a lot of useful information.
 
 	waiting := gracefulShutdown(context.Background(), 30*time.Second, map[string]operation{
 		"writefile": func(ctx context.Context) error {
+
+			fmt.Println("Gracefully flushing data to file... Please hold on.")
+			Message <- "LeaveLobby()"
+			time.Sleep(5 * time.Second)
 			exportJson()
 			return nil
 		},
