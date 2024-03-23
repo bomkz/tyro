@@ -211,21 +211,35 @@ func onPlayerLeave(currentMessage string, currentLobby LobbyStruct) LobbyStruct 
 }
 
 func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+
 	leftside, rightside, found := strings.Cut(currentMessage, "(")
 	if !found {
 		return currentLobby
 	}
-	username, _, found := strings.Cut(rightside, ")")
+	username, rightestside, found := strings.Cut(rightside, ")")
+	if username == "Clone" {
+		_, username, _ = strings.Cut(rightestside, "(")
+		username, _, _ = strings.Cut(username, ")")
+	}
+	if strings.Contains(username, "T-55") || strings.Contains(username, "AH-94") || strings.Contains(username, "EF-24G") {
+		leftside, username, _ = strings.Cut(username, "(")
+	}
+	var multicrew bool
+	if strings.Contains(username, ",") {
+		multicrew = true
+	}
+
 	if !found {
 		return currentLobby
 	}
+
 	var aircraft string
 	switch {
-	case strings.Contains(leftside, "A/V-42C") || strings.Contains(leftside, "vtol4"):
+	case strings.Contains(leftside, "A/V-42C") || strings.Contains(leftside, "vtol4") || strings.Contains(leftside, "AV-42C"):
 		aircraft = "A/V-42C"
-	case strings.Contains(leftside, "F/A-26B") || strings.Contains(leftside, "afighter"):
+	case strings.Contains(leftside, "F/A-26B") || strings.Contains(leftside, "FA-26B") || strings.Contains(leftside, "afighter"):
 		aircraft = "F/A-26B"
-	case strings.Contains(leftside, "EF-24G"):
+	case strings.Contains(leftside, "EF-24G") || strings.Contains(leftside, "EF-24"):
 		aircraft = "EF-24G"
 	case strings.Contains(leftside, "F-45A") || strings.Contains(leftside, "SEVTF"):
 		aircraft = "F-45A"
@@ -235,8 +249,21 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		aircraft = "AH-94"
 	}
 
+	if multicrew {
+		username1, username2, _ := strings.Cut(username, ", ")
+		for x, y := range currentLobby.Players {
+			if y.Name == username1 && y.Active && y.Aircraft != "" {
+				currentLobby.Players[x].Aircraft = aircraft
+			}
+		}
+		for x, y := range currentLobby.Players {
+			if y.Name == username2 && y.Active && aircraft != "" {
+				currentLobby.Players[x].Aircraft = aircraft
+			}
+		}
+	}
 	for x, y := range currentLobby.Players {
-		if y.Name == username && y.Active && aircraft != "" {
+		if y.Name == username && y.Active && aircraft != "" && !multicrew {
 			currentLobby.Players[x].Aircraft = aircraft
 		}
 	}

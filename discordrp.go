@@ -54,6 +54,11 @@ func updateRichPresence(currentLobby LobbyStruct) {
 	}
 	smallText := "chop chop"
 
+	if len(details) >= 24 {
+		details = details[:21]
+		details = details + "..."
+	}
+
 	err := client.SetActivity(client.Activity{
 		State:      state,
 		Details:    details,

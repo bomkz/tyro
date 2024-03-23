@@ -57,6 +57,7 @@ func onLobbyJoin(host bool) {
 		case strings.Contains(currentMessage, ").SetTeam("):
 			currentLobby = onSetTeam(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
+
 			username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
 			craft := ""
 			switch {
