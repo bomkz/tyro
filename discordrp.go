@@ -54,8 +54,8 @@ func updateRichPresence(currentLobby LobbyStruct) {
 	}
 	smallText := "chop chop"
 
-	if len(details) >= 24 {
-		details = details[:21]
+	if len(details) >= 20 {
+		details = details[:16]
 		details = details + "..."
 	}
 
