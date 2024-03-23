@@ -107,8 +107,9 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.Name, _ = strings.CutSuffix(name, ")")
 	case strings.Contains(currentMessage, "Join request accepted!"):
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
-	case strings.Contains(currentMessage, "getting scenario"):
-		currentLobby.Lobby.PreLobby.ScenarioInfo, _ = strings.CutPrefix(currentMessage, "getting scenario ")
+	case strings.Contains(currentMessage, "Launching Multiplayer game for "):
+		_, cutString, _ := strings.Cut(currentMessage, ":")
+		currentLobby.Lobby.PreLobby.ScenarioInfo, _, _ = strings.Cut(cutString, " (")
 	case strings.Contains(currentMessage, "Connecting to host: "):
 		var trimmedMessage string
 		var ID string

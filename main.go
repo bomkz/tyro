@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -39,10 +40,12 @@ This file is filled with a lot of useful information.
 
 `)
 
+	ensureLogFileNew()
 	richPresence()
 	time.Sleep(2 * time.Second)
 	idle()
 
+	saveoutput = true
 	go readLog()
 
 	waiting := gracefulShutdown(context.Background(), 30*time.Second, map[string]operation{
@@ -55,6 +58,21 @@ This file is filled with a lot of useful information.
 	<-waiting
 
 	fmt.Println("JAMCAT-MACH is now listening to log events.")
+}
+func taintFile() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	file, _ := os.OpenFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	defer file.Close()
+
+	// Append some data
+	if _, err := file.Write([]byte("This is a taint mark left by github.com/angelfluffyookami/tyro to ensure the program only reads new log files. Ignore this comment, as it does not modify this file, or the game, in any other way.")); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string]operation) <-chan struct{} {
@@ -105,3 +123,31 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 }
 
 type operation func(ctx context.Context) error
+
+func ensureLogFileNew() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	file, _ := os.ReadFile(home + "\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player.log")
+
+	if strings.Contains(string(file), "This is a taint mark left by github.com/angelfluffyookami/tyro to ensure the program only reads new log files. Ignore this comment, as it does not modify this file, or the game, in any other way.") {
+		fmt.Println(`
+	
+	
+	
+	
+	
+	
+
+
+Warning: Old Player.log file has been detected, please make sure you run tyro.exe after you open VTOL VR, otherwise, weird behaviour may arise.
+If you reopened tyro.exe after a crash or accidentally closing it, don't worry, it shouldn't experience any bugs.`)
+
+	} else {
+		taintFile()
+	}
+}
+
+var saveoutput = false
