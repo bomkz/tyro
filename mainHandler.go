@@ -69,7 +69,7 @@ func onLobbyJoin(host bool) {
 			}
 
 			for x, y := range currentLobby.Players {
-				if y.Name == username && y.Active {
+				if y.Name == username && y.Active && craft != "" {
 					currentLobby.Players[x].Aircraft = craft
 				}
 			}

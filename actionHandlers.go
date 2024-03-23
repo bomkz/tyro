@@ -236,7 +236,7 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	}
 
 	for x, y := range currentLobby.Players {
-		if y.Name == username && y.Active {
+		if y.Name == username && y.Active && aircraft != "" {
 			currentLobby.Players[x].Aircraft = aircraft
 		}
 	}
