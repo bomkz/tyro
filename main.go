@@ -34,7 +34,7 @@ You can delete or keeep it, however, in the future, I have some projects planned
 and output graphs of various varieties as you choose, and also view mission summaries in an easily readable way.
 This file is filled with a lot of useful information.
 ------------------------------------------------------------------------------------------------------
-! ! JAMCAT-MACH is starting up, please make sure you are currently not spawned in an aircraft if VTOL VR is already running ! !
+! ! TYRO is starting up, please make sure you are currently not spawned in an aircraft if VTOL VR is already running ! !
 ------------------------------------------------------------------------------------------------------
 
 
