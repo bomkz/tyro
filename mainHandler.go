@@ -56,7 +56,23 @@ func onLobbyJoin(host bool) {
 			}
 		case strings.Contains(currentMessage, ").SetTeam("):
 			currentLobby = onSetTeam(currentMessage, currentLobby)
+		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
+			username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
+			craft := ""
+			switch {
+			case strings.Contains(aircraft, "EF-24"):
+				craft = "EF-24G"
+			case strings.Contains(aircraft, "T-55") || strings.Contains(aircraft, "Test55"):
+				craft = "T-55"
+			case strings.Contains(aircraft, "AH-94"):
+				craft = "AH-94"
+			}
 
+			for x, y := range currentLobby.Players {
+				if y.Name == username && y.Active {
+					currentLobby.Players[x].Aircraft = craft
+				}
+			}
 		case currentMessage == "LeaveLobby()":
 			idle()
 			InLobby = false

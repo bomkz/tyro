@@ -139,7 +139,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			aircraft = y.Aircraft
 			newKill.UserTeam = y.Team
 			killerid = y.ID64
-			newKill.KilledBy = killer
+			newKill.KilledBy = y.Aircraft
 			newKill.UserTeam = y.Team
 			if newKill.PlayerTeam == "" && newKill.KilledID == "" && newKill.KilledName == "" {
 				newKill.KilledID = "<environment>"
@@ -221,15 +221,15 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	}
 	var aircraft string
 	switch {
-	case strings.Contains(leftside, "A/V-42C"):
+	case strings.Contains(leftside, "A/V-42C") || strings.Contains(leftside, "vtol4"):
 		aircraft = "A/V-42C"
-	case strings.Contains(leftside, "F/A-26B"):
+	case strings.Contains(leftside, "F/A-26B") || strings.Contains(leftside, "afighter"):
 		aircraft = "F/A-26B"
 	case strings.Contains(leftside, "EF-24G"):
 		aircraft = "EF-24G"
-	case strings.Contains(leftside, "F-45A"):
+	case strings.Contains(leftside, "F-45A") || strings.Contains(leftside, "SEVTF"):
 		aircraft = "F-45A"
-	case strings.Contains(leftside, "T-55"):
+	case strings.Contains(leftside, "T-55") || strings.Contains(currentMessage, "Test55"):
 		aircraft = "T-55"
 	case strings.Contains(leftside, "AH-94"):
 		aircraft = "AH-94"
