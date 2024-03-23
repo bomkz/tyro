@@ -1,7 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 var Version = "dev"
@@ -9,35 +16,25 @@ var Version = "dev"
 func main() {
 
 	fmt.Print(
-		`JAMCAT-MACH ` + Version + `
-		
-Jet Audio and Music Control Access Terminal-Media Access and Control Hub
-		
-JAMCAT-MACH made by @f45a - discord.
-GIthub repo: https://github.com/angelfluffyookami/jamcat-mach
-Please be aware, this utility will append ".bkp" to any mp3 files currently in the VTOL VR folder.
-If closed properly without crashing or using TaskMan, will remove ".bkp" from said files and delete 
-any temporary files placed in this folder.
+		`TYRO ` + Version + `
+Telemetry Yield Real-time Observations
+Utility to display discord rich presence, and dump your statistics afterwards.
+Credits to:
 
-I have not experienced any data loss using this, and there shouldn't be any to expect, however, please don't be stupid:
-		- Don't touch the Player.log file while program is in use.
-		- Do NOT modify, add, or remove any file in VTOLVR's RadioMusic folder while in use. 
-			(I did add a way to handle this, however, I cannot guarantee it will work 100 percent of the time, so just d o n t)
-			
+@joespeed52 - F/A-26B Photo on the default rich presence token.
+@toast2812 - EF-24G and F-45A Photo on the default rich presence token.
+@kentuckyfrieda10wallsimper - AH-94 Photo on the default rich presence token.
+@romanian_wallet_inspector - A/V-42C Photo on the default rich presence token. 
+@dubyaaa - T-55 Photo on the default rich presence token.
+
 ------------------------------------------------------------------------------------------------------
-Licensed under MPLv2
+Licensed under MIT
 ------------------------------------------------------------------------------------------------------
 
-Log meaning:
-Bearing X, the song VTOL VR thinks it's playing, where X equals the name of the mp3. E.g. 1.mp3 = Bearing 1
-
-Angels X, the song VTOL VR thought it was playing before the current bearing, where X equals the name of the mp3. E.g. 0.mp3 = Angels 0
-
-Interpreting this means if spike bearing goes backwards in regards to angels, then song will be rewinded. E.g. 0<-1<-2<-0
-Vice versa is also true. E.g. 0->1->2->0
-
-Splash 1, angels 0. Means player died, and the program is now expecting VTOL VR to start playing 0.mp3 again if player presses play button.
-
+Upon closure, the program will save your entire gameplay session statistics to a timestamp tagged json file,
+You can delete or keeep it, however, in the future, I have some projects planned where you can use these files
+and output graphs of various varieties as you choose, and also view mission summaries in an easily readable way.
+This file is filled with a lot of useful information.
 ------------------------------------------------------------------------------------------------------
 ! ! JAMCAT-MACH is starting up, please make sure you are currently not spawned in an aircraft if VTOL VR is already running ! !
 ------------------------------------------------------------------------------------------------------
@@ -45,11 +42,69 @@ Splash 1, angels 0. Means player died, and the program is now expecting VTOL VR 
 
 `)
 
+	richPresence()
+	time.Sleep(2 * time.Second)
+	idle()
+
 	go readLog()
 
-	<-wait
+	waiting := gracefulShutdown(context.Background(), 30*time.Second, map[string]operation{
+		"writefile": func(ctx context.Context) error {
+			exportJson()
+			return nil
+		},
+	})
+
+	<-waiting
 
 	fmt.Println("JAMCAT-MACH is now listening to log events.")
 }
 
-var wait = make(chan bool)
+func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string]operation) <-chan struct{} {
+	wait := make(chan struct{})
+	go func() {
+		s := make(chan os.Signal, 1)
+
+		// add any other syscalls that you want to be notified with
+		signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+		<-s
+
+		log.Println("shutting down")
+
+		// set timeout for the ops to be done to prevent system hang
+		timeoutFunc := time.AfterFunc(timeout, func() {
+			log.Printf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds())
+			os.Exit(0)
+		})
+
+		defer timeoutFunc.Stop()
+
+		var wg sync.WaitGroup
+
+		// Do the operations asynchronously to save time
+		for key, op := range ops {
+			wg.Add(1)
+			innerOp := op
+			innerKey := key
+			go func() {
+				defer wg.Done()
+
+				log.Printf("cleaning up: %s", innerKey)
+				if err := innerOp(ctx); err != nil {
+					log.Printf("%s: clean up failed: %s", innerKey, err.Error())
+					return
+				}
+
+				log.Printf("%s was shutdown gracefully", innerKey)
+			}()
+		}
+
+		wg.Wait()
+
+		close(wait)
+	}()
+
+	return wait
+}
+
+type operation func(ctx context.Context) error
