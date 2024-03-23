@@ -28,7 +28,7 @@ func onLobbyJoin(host bool) {
 		case strings.Contains(currentMessage, "Setting up slot UI: "):
 			currentLobby = onSlotUISetup(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "ilst_"):
-			currentLobby = onIlstUpdate(currentMessage, currentLobby)
+			currentLobby = onIlstUpdate(currentMessage, currentLobby, host)
 		case strings.Contains(currentMessage, "Resetting objective "):
 			currentLobby = onResetObjective(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "Setting up objective "):
@@ -113,6 +113,8 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.Name, _ = matchHostedMap(currentMessage)
 		currentLobby.Lobby.PreLobby.JoinAttempted = true
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
+		newPlayer := createPlayer(currentPilot, "")
+		currentLobby.Players = append(currentLobby.Players, newPlayer)
 
 		currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name
 	case strings.Contains(currentMessage, "Attempting to join lobby"):
