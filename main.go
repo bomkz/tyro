@@ -10,14 +10,17 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	updatechecker "github.com/Christian1984/go-update-checker"
 )
 
-var Version = "dev"
+var Version = "1.1.1"
 
 func main() {
-
 	fmt.Print(info)
-
+	uc := updatechecker.New("angelfluffyookami", "tyro", "Tyro", "https://github.com/angelfluffyookami/tyro/releases/latest", 0, true)
+	uc.CheckForUpdate(Version)
+	uc.PrintMessage()
 	// Warns user if they opened tyro.exe before opening VTOL VR
 	ensureLogFileNew()
 
