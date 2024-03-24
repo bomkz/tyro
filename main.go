@@ -20,10 +20,16 @@ func main() {
 		`TYRO ` + Version + `
 Telemetry Yield Real-time Observations
 Utility to display discord rich presence, and dump your statistics afterwards.
-Credits to:
+
+Credits to the following for the:
 
 @kentuckyfrieda10wallsimper - AH-94 Photo on the default rich presence token. 
 @dubyaaa - T-55 Photo on the default rich presence token.
+@toast2812 - EF-24G and F-45A Photo on the default rich presence token.
+@joespeed52 - F/A-26B Photo on the default rich presence token.
+@romanian_wallet_inspector - A/V-42C Photo on the default rich presence token.
+
+https://discord.gg/caw8 - Amazing liveries displayed in these photos.
 
 ------------------------------------------------------------------------------------------------------
 Licensed under MIT

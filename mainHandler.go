@@ -19,6 +19,7 @@ func onLobbyJoin(host bool) {
 	for {
 		currentMessage := <-Message
 		currentLobby = updateLobbyCount(currentLobby)
+
 		if !currentLobby.Lobby.PreLobby.LoadedIn {
 
 			currentLobby = preLobbyHandler(currentMessage, currentLobby, host)
@@ -88,9 +89,9 @@ func onLobbyJoin(host bool) {
 			}
 		}
 
-		for _, x := range LobbyHistory {
-			if x.Lobby.ID == currentLobby.Lobby.ID {
-				x = currentLobby
+		for x, y := range LobbyHistory {
+			if y.Lobby.ID == currentLobby.Lobby.ID {
+				LobbyHistory[x] = currentLobby
 			}
 		}
 		updateRichPresence(currentLobby)

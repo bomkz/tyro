@@ -9,6 +9,7 @@ import (
 )
 
 func ilstUnwraps(currentMessage string) (matchesFound []string, found bool) {
+
 	// Compile the regular expression
 	re := regexp2.MustCompile(ilstRegex, regexp2.DefaultUnmarshalOptions)
 

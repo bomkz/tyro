@@ -17,6 +17,7 @@ func onIlstUpdate(currentMessage string, currentLobby LobbyStruct, host bool) Lo
 
 		matches, found := separateIlst(x)
 		if host {
+
 			for x, y := range currentLobby.Players {
 
 				if y.Name == matches[1] && y.Active && y.ID64 == "" {
@@ -139,6 +140,8 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 				newKill.KilledID += "(" + u.ID64 + ")"
 				newKill.KilledName += "(" + u.Name + ")"
 				newKill.PlayerTeam = u.Team
+				newKill.Killed = u.Aircraft
+				break
 			}
 		}
 	}
@@ -146,6 +149,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var killerid string
 	for x, y := range currentLobby.Players {
 		if y.Name == killer && y.Active {
+
 			y.KillCount += 1
 			aircraft = y.Aircraft
 			newKill.UserTeam = y.Team
@@ -160,6 +164,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			newKill.Copilot = y.Copilot
 			y.Kills = append(y.Kills, newKill)
 			currentLobby.Players[x] = y
+			break
 		}
 	}
 
@@ -179,7 +184,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 					y.DeathCount += 1
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
-
+					break
 				}
 			}
 
@@ -245,6 +250,7 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	}
 
 	var aircraft string
+
 	switch {
 	case strings.Contains(leftside, "A/V-42C") || strings.Contains(leftside, "vtol4") || strings.Contains(leftside, "AV-42C"):
 		aircraft = "A/V-42C"
@@ -265,11 +271,13 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		for x, y := range currentLobby.Players {
 			if y.Name == username1 && y.Active && y.Aircraft != "" {
 				currentLobby.Players[x].Aircraft = aircraft
+
 			}
 		}
 		for x, y := range currentLobby.Players {
 			if y.Name == username2 && y.Active && aircraft != "" {
 				currentLobby.Players[x].Aircraft = aircraft
+
 			}
 		}
 	}
@@ -303,15 +311,16 @@ func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStru
 	}
 
 	// Range over newCrew []string and...
-	for x, y := range newCrew {
+	for _, y := range newCrew {
 		// Range over currentLobby.Players []LobbyPlayerStruct and...
-		for _, u := range currentLobby.Players {
+		for z, u := range currentLobby.Players {
 			// If current currentLobby.Players.Name index matches current newCrew.Name index,
 			// and current currentLobby.Players.Active equals true, then...
 			if u.Name == y && u.Active {
 				// current currentLobby.Players.Aircraft index equals newAircraft
 				u.Aircraft = newAircraft
-				currentLobby.Players[x] = u
+
+				currentLobby.Players[z] = u
 			}
 		}
 	}
@@ -327,6 +336,7 @@ func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStru
 *	TODO: capture string examples by using breakpoints.
  */
 func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+
 	var newDeath DeathStruct
 	username, found := matchUsername(currentMessage)
 	if !found {
