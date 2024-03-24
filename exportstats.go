@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -16,7 +15,7 @@ func exportJson() {
 	timestamp := time.Now()
 	err = os.Mkdir(".\\vtolvrdata", os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	err = os.WriteFile(".\\vtolvrdata\\vtolvr-"+fmt.Sprint(timestamp.Unix())+".json", beautifulJSON, 0644)
 	if err != nil {
