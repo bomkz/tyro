@@ -23,17 +23,17 @@ jobs:
       with:
         go-version-file: './go.mod'
 
-    - name: Set up JAMCAT-MACH
+    - name: Set up Tyro
       run: go mod tidy
       
-    - name: Build JAMCAT-MACH
+    - name: Build Tyro
       run: GOOS=windows GOARCH=amd64 go build -ldflags="-X 'main.Version=${{ github.event.inputs.Version }}'" -o Tyro-${{ github.event.inputs.Version }}.exe -v ./...
 
     - name: Create new Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run:
-        gh release create ${{ github.event.inputs.Version }} --target main 
+        gh release create ${{ github.event.inputs.Version }} --latest --target main 
     
     - name: Upload Release Asset
       env:
