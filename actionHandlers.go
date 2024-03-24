@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -108,9 +107,6 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var killer string
 	var weapon string
 	var killed string
-	if strings.Contains(currentMessage, "Lobby message from FORDMASTERTECH1: $log_PapaMoose killed EF-24 with GAU-22.") {
-		fmt.Println("bwaaa")
-	}
 	var killedName []string
 	var tmpname string
 	_, trimmedMessage, _ = strings.Cut(currentMessage, "$log_")
@@ -138,8 +134,6 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		Killed: killed,
 	}
 
-	var saved1 bool
-	var saved2 bool
 	for _, y := range killedName {
 		for _, u := range currentLobby.Players {
 			if u.Name == y && u.Active {
@@ -151,12 +145,11 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			}
 		}
 	}
+
 	var aircraft string
 	var killerid string
 	for x, y := range currentLobby.Players {
 		if y.Name == killer && y.Active {
-
-			saved1 = true
 			y.KillCount += 1
 			aircraft = y.Aircraft
 			newKill.UserTeam = y.Team
@@ -174,10 +167,6 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			break
 		}
 	}
-	if !saved1 {
-		fmt.Println("save1: " + currentMessage)
-	}
-
 	if killedName != nil {
 		newDeath := DeathStruct{
 			Weapon:       newKill.Weapon,
@@ -194,20 +183,46 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 					y.DeathCount += 1
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
-					saved2 = true
 					break
 				}
 			}
 
 		}
 	}
-	if !saved2 {
-		fmt.Println("save2: " + currentMessage)
+
+	return currentLobby
+}
+
+func onMCSeatOccupy(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+	username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
+	craft := ""
+	switch {
+	case strings.Contains(aircraft, "EF-24"):
+		craft = "EF-24G"
+	case strings.Contains(aircraft, "T-55") || strings.Contains(aircraft, "Test55"):
+		craft = "T-55"
+	case strings.Contains(aircraft, "AH-94"):
+		craft = "AH-94"
+	}
+
+	for x, y := range currentLobby.Players {
+		if y.Name == username && y.Active && craft != "" {
+			currentLobby.Players[x].Aircraft = craft
+		}
 	}
 
 	return currentLobby
 }
 
+func onMissionEnd(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
+	if strings.Contains(currentMessage, "Allied") {
+		currentLobby.Lobby.WinningTeam = "Allied"
+
+	} else if strings.Contains(currentMessage, "Enemy") {
+		currentLobby.Lobby.WinningTeam = "Enemy"
+	}
+	return currentLobby
+}
 func updateLobbyCount(currentLobby LobbyStruct) LobbyStruct {
 	currentLobby.Lobby.TotalLobbyDeaths = 0
 	currentLobby.Lobby.TotalLobbyKills = 0

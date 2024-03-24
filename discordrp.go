@@ -26,11 +26,17 @@ func startRP() {
 	}
 }
 
+var idling bool
+
 var updateRP = make(chan bool)
 
 func updateRichPresence() {
 
 	for {
+		<-updateRP
+		if idling {
+			return
+		}
 		if len(LobbyHistory) == 0 {
 			continue
 		}
@@ -103,6 +109,7 @@ func updateRichPresence() {
 }
 
 func idle() {
+	idling = true
 	now := time.Now()
 	err := client.SetActivity(client.Activity{
 		State:      "Idling in game...",

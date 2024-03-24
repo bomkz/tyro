@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -19,19 +18,11 @@ func onLobbyJoin(host bool) {
 
 	for {
 		currentMessage := <-Message
-
-		if strings.Contains(currentMessage, "mirror") {
-			fmt.Println(currentMessage)
-		}
 		currentLobby = updateLobbyCount(currentLobby)
-
 		if !currentLobby.Lobby.PreLobby.LoadedIn {
-
 			currentLobby = preLobbyHandler(currentMessage, currentLobby, host)
-
 		}
 		switch {
-
 		case strings.Contains(currentMessage, "Setting up slot UI: "):
 			currentLobby = onSlotUISetup(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "ilst_"):
@@ -55,36 +46,15 @@ func onLobbyJoin(host bool) {
 		case strings.Contains(currentMessage, "identity updated"):
 			currentLobby = onIdentityUpdate(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "Endmission - Final Winner: "):
-			if strings.Contains(currentMessage, "Allied") {
-				currentLobby.Lobby.WinningTeam = "Allied"
-
-			} else if strings.Contains(currentMessage, "Enemy") {
-				currentLobby.Lobby.WinningTeam = "Enemy"
-			}
+			currentLobby = onMissionEnd(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, ").SetTeam("):
 			currentLobby = onSetTeam(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
-			username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
-			craft := ""
-			switch {
-			case strings.Contains(aircraft, "EF-24"):
-				craft = "EF-24G"
-			case strings.Contains(aircraft, "T-55") || strings.Contains(aircraft, "Test55"):
-				craft = "T-55"
-			case strings.Contains(aircraft, "AH-94"):
-				craft = "AH-94"
-			}
-
-			for x, y := range currentLobby.Players {
-				if y.Name == username && y.Active && craft != "" {
-					currentLobby.Players[x].Aircraft = craft
-				}
-			}
+			currentLobby = onMCSeatOccupy(currentMessage, currentLobby)
 		case currentMessage == "LeaveLobby()":
 			idle()
 			InLobby = false
 			currentLobby.Lobby.LeaveTime = time.Now()
-
 			for x, y := range LobbyHistory {
 				if y.Lobby.ID == currentLobby.Lobby.ID {
 					LobbyHistory[x] = currentLobby

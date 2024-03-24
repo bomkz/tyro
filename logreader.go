@@ -30,7 +30,8 @@ func tailLogFile() {
 func logHandler(newline string) bool {
 	if strings.Contains(newline, "Attempting to join lobby") || strings.Contains(newline, "Creating a lobby for ") {
 		var host bool
-		if strings.Contains(newline, "Creating a lobby for 16 players") {
+		idling = false
+		if strings.Contains(newline, "Creating a lobby for ") {
 			host = true
 		}
 		go onLobbyJoin(host)
