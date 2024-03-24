@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,9 +18,11 @@ func onLobbyJoin(host bool) {
 	currentLobby.Lobby.WinningTeam = "Invalid"
 
 	for {
-
 		currentMessage := <-Message
 
+		if strings.Contains(currentMessage, "mirror") {
+			fmt.Println(currentMessage)
+		}
 		currentLobby = updateLobbyCount(currentLobby)
 
 		if !currentLobby.Lobby.PreLobby.LoadedIn {

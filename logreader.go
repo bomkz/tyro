@@ -28,7 +28,7 @@ func tailLogFile() {
 
 // Runs the appropriate function depending on the log line contents.
 func logHandler(newline string) bool {
-	if strings.Contains(newline, "Attempting to join lobby") || strings.Contains(newline, "Creating a lobby for 16 players") {
+	if strings.Contains(newline, "Attempting to join lobby") || strings.Contains(newline, "Creating a lobby for ") {
 		var host bool
 		if strings.Contains(newline, "Creating a lobby for 16 players") {
 			host = true
