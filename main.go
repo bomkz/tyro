@@ -14,7 +14,7 @@ import (
 	updatechecker "github.com/Christian1984/go-update-checker"
 )
 
-var Version = "1.1.1"
+var Version = "0.0"
 
 func main() {
 	fmt.Print(info)
@@ -37,7 +37,10 @@ func main() {
 		"writefile": func(ctx context.Context) error {
 
 			fmt.Println("Gracefully flushing data to file... Please hold on.")
-			Message <- "LeaveLobby()"
+			if !idling {
+				Message <- "LeaveLobby()"
+			}
+
 			time.Sleep(5 * time.Second)
 			exportJson()
 			return nil
@@ -59,7 +62,7 @@ func taintFile() {
 	defer file.Close()
 
 	// Append some data
-	if _, err := file.Write([]byte("This is a taint mark left by github.com/angelfluffyookami/tyro to ensure the program only reads new log files. Ignore this comment, as it does not modify this file, or the game, in any other way.")); err != nil {
+	if _, err := file.Write([]byte("This is a taint mark left by github.com/angelfluffyookami/tyro to ensure the program only reads new log files. Ignore this comment, as it does not modify this file, or the game, in any other way.\n")); err != nil {
 		log.Fatal(err)
 	}
 }

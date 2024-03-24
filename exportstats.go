@@ -8,6 +8,7 @@ import (
 )
 
 func exportJson() {
+
 	beautifulJSON, err := json.MarshalIndent(LobbyHistory, "", "    ") // Use four spaces for indentation
 	if err != nil {
 		panic(err)
