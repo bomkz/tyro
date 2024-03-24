@@ -27,29 +27,35 @@ func updateRichPresence(currentLobby LobbyStruct) {
 	details := currentLobby.Lobby.PreLobby.ScenarioInfo
 
 	var aircraft string
+	var smalltext string
 	largetext := "Currently flying: "
 	switch player.Aircraft {
 	case "EF-24G":
 		largetext += "EF-24G Mischief"
 		aircraft = "ef24g"
+		smalltext = "Split the throttles soulja boy!"
 	case "F-45A":
 		largetext += "F-45A Ghost"
 		aircraft = "f45a"
+		smalltext = "The mind of an f45 main cannot comprehend a 26 chaffing."
 	case "F/A-26B":
 		largetext += "F/A-26B Wasp"
 		aircraft = "fa26b"
+		smalltext = "Carrying literally the entire weight of a Shipping Container in bombs."
 	case "T-55":
 		largetext += "T-55 Tyro"
 		aircraft = "t55"
+		smalltext = "Courtesy of dubyaaa"
 	case "AH-94":
 		largetext += "AH-94 Dragonfly"
 		aircraft = "ah94"
+		smalltext = "AH-94 the best fighter jet ever 🤓"
 	case "AV-42C":
 		largetext += "A/V-42C Kestrel"
 		aircraft = "av42c"
+		smalltext = "Sacred meeting of the kestrel kouncil."
 
 	}
-	smallText := "chop chop"
 
 	if len(details) >= 20 {
 		details = details[:16]
@@ -62,7 +68,7 @@ func updateRichPresence(currentLobby LobbyStruct) {
 		LargeImage: aircraft,
 		LargeText:  largetext,
 		SmallImage: "vtolvr",
-		SmallText:  smallText,
+		SmallText:  smalltext,
 
 		Timestamps: &client.Timestamps{
 			Start: &currentLobby.Lobby.JoinTime,
