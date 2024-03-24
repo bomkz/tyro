@@ -9,11 +9,8 @@ import (
 )
 
 func richPresence() {
-	err := client.Login("APPLICATION_ID")
+	client.Login("APPLICATION_ID")
 
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func updateRichPresence(currentLobby LobbyStruct) {
@@ -33,22 +30,22 @@ func updateRichPresence(currentLobby LobbyStruct) {
 	largetext := "Currently flying: "
 	switch player.Aircraft {
 	case "EF-24G":
-		largetext += "EF-24G"
+		largetext += "EF-24G Mischief"
 		aircraft = "ef24g"
 	case "F-45A":
-		largetext += "F-45A"
+		largetext += "F-45A Ghost"
 		aircraft = "f45a"
 	case "F/A-26B":
-		largetext += "F/A-26B"
+		largetext += "F/A-26B Wasp"
 		aircraft = "fa26b"
 	case "T-55":
-		largetext += "T-55"
+		largetext += "T-55 Tyro"
 		aircraft = "t55"
 	case "AH-94":
-		largetext += "AH-94"
+		largetext += "AH-94 Dragonfly"
 		aircraft = "ah94"
 	case "AV-42C":
-		largetext += "A/V-42C"
+		largetext += "A/V-42C Kestrel"
 		aircraft = "av42c"
 
 	}
@@ -59,7 +56,7 @@ func updateRichPresence(currentLobby LobbyStruct) {
 		details = details + "..."
 	}
 
-	err := client.SetActivity(client.Activity{
+	client.SetActivity(client.Activity{
 		State:      state,
 		Details:    details,
 		LargeImage: aircraft,
@@ -71,10 +68,6 @@ func updateRichPresence(currentLobby LobbyStruct) {
 			Start: &currentLobby.Lobby.JoinTime,
 		},
 	})
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 }
 

@@ -18,6 +18,7 @@ func onLobbyJoin(host bool) {
 
 	for {
 		currentMessage := <-Message
+
 		currentLobby = updateLobbyCount(currentLobby)
 
 		if !currentLobby.Lobby.PreLobby.LoadedIn {
