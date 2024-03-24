@@ -6,10 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var logLines []string
-
-var tick = make(chan bool)
-
 type LobbyStruct struct {
 	Players []LobbyPlayerStruct `json:"players"`
 	Lobby   LobbyInfoStruct     `json:"lobby"`
@@ -127,3 +123,32 @@ const ilstSeparateRegex = `[^,]+`
 const lobbyHostRegex = `(?<=:)[^()]+(?=\s*\()(?<=\S)`
 
 const ilstRegex = `(\d+,[^,]+,[^,]+,-?\d+,[^,]+,\d+,\d+)`
+
+var info = `TYRO ` + Version + `
+Telemetry Yield Real-time Observations
+Utility to display discord rich presence, and dump your statistics afterwards.
+
+Credits to the following for the:
+
+@kentuckyfrieda10wallsimper - AH-94 Photo on the default rich presence token. 
+@dubyaaa - T-55 Photo on the default rich presence token.
+@toast2812 - EF-24G and F-45A Photo on the default rich presence token.
+@joespeed52 - F/A-26B Photo on the default rich presence token.
+@romanian_wallet_inspector - A/V-42C Photo on the default rich presence token.
+
+https://discord.gg/caw8 - Amazing liveries displayed in these photos.
+
+------------------------------------------------------------------------------------------------------
+Licensed under MIT
+------------------------------------------------------------------------------------------------------
+
+Upon closure, the program will save your entire gameplay session statistics to a timestamp tagged json file,
+You can delete or keeep it, however, in the future, I have some projects planned where you can use these files
+and output graphs of various varieties as you choose, and also view mission summaries in an easily readable way.
+This file is filled with a lot of useful information.
+------------------------------------------------------------------------------------------------------
+! ! TYRO is starting up, please make sure you are currently not spawned in an aircraft if VTOL VR is already running ! !
+------------------------------------------------------------------------------------------------------
+
+
+`

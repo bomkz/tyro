@@ -8,72 +8,97 @@ import (
 	"github.com/hugolgst/rich-go/client"
 )
 
-func richPresence() {
-	client.Login("APPLICATION_ID")
-
+func sendHandshake() {
+	err := client.Login("1220960048704913448")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func updateRichPresence(currentLobby LobbyStruct) {
-	var player LobbyPlayerStruct
-	for _, y := range currentLobby.Players {
-		if y.Name == currentPilot && y.Active {
-			player = y
+func startRP() {
+	sendHandshake()
+	go updateRichPresence()
+
+	for {
+
+		updateRP <- true
+		time.Sleep(16 * time.Second)
+	}
+}
+
+var updateRP = make(chan bool)
+
+func updateRichPresence() {
+
+	for {
+		if len(LobbyHistory) == 0 {
+			continue
+		}
+		currentLobby := LobbyHistory[len(LobbyHistory)-1]
+		var player LobbyPlayerStruct
+		for _, y := range currentLobby.Players {
+			if y.Name == currentPilot && y.Active {
+				player = y
+			}
+		}
+		playerkdr := getKDR(player)
+
+		state := playerkdr + "-" + "Objectives: " + countObjectives(currentLobby)
+
+		details := currentLobby.Lobby.PreLobby.ScenarioInfo
+
+		var aircraft string
+		var smalltext string
+		largetext := "Currently flying: "
+		switch player.Aircraft {
+		case "EF-24G":
+			largetext += "EF-24G Mischief"
+			aircraft = "ef24g"
+			smalltext = "Split the throttles soulja boy!"
+		case "F-45A":
+			largetext += "F-45A Ghost"
+			aircraft = "f45a"
+			smalltext = "The mind of an f45 main cannot comprehend a 26 chaffing."
+		case "F/A-26B":
+			largetext += "F/A-26B Wasp"
+			aircraft = "fa26b"
+			smalltext = "Carrying literally the entire weight of a Shipping Container in bombs."
+		case "T-55":
+			largetext += "T-55 Tyro"
+			aircraft = "t55"
+			smalltext = "Courtesy of dubyaaa"
+		case "AH-94":
+			largetext += "AH-94 Dragonfly"
+			aircraft = "ah94"
+			smalltext = "Courtesy of kentuckyfrieda10wallsimper"
+		case "AV-42C":
+			largetext += "A/V-42C Kestrel"
+			aircraft = "av42c"
+			smalltext = "Sacred meeting of the kestrel kouncil."
+
+		}
+
+		if len(details) >= 20 {
+			details = details[:16]
+			details = details + "..."
+		}
+
+		err := client.SetActivity(client.Activity{
+			State:      state,
+			Details:    details,
+			LargeImage: aircraft,
+			LargeText:  largetext,
+			SmallImage: "vtolvr",
+			SmallText:  smalltext,
+
+			Timestamps: &client.Timestamps{
+				Start: &currentLobby.Lobby.JoinTime,
+			},
+		})
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
-	playerkdr := getKDR(player)
-
-	state := playerkdr + "-" + "Objectives: " + countObjectives(currentLobby)
-
-	details := currentLobby.Lobby.PreLobby.ScenarioInfo
-
-	var aircraft string
-	var smalltext string
-	largetext := "Currently flying: "
-	switch player.Aircraft {
-	case "EF-24G":
-		largetext += "EF-24G Mischief"
-		aircraft = "ef24g"
-		smalltext = "Split the throttles soulja boy!"
-	case "F-45A":
-		largetext += "F-45A Ghost"
-		aircraft = "f45a"
-		smalltext = "The mind of an f45 main cannot comprehend a 26 chaffing."
-	case "F/A-26B":
-		largetext += "F/A-26B Wasp"
-		aircraft = "fa26b"
-		smalltext = "Carrying literally the entire weight of a Shipping Container in bombs."
-	case "T-55":
-		largetext += "T-55 Tyro"
-		aircraft = "t55"
-		smalltext = "Courtesy of dubyaaa"
-	case "AH-94":
-		largetext += "AH-94 Dragonfly"
-		aircraft = "ah94"
-		smalltext = "AH-94 the best fighter jet ever 🤓"
-	case "AV-42C":
-		largetext += "A/V-42C Kestrel"
-		aircraft = "av42c"
-		smalltext = "Sacred meeting of the kestrel kouncil."
-
-	}
-
-	if len(details) >= 20 {
-		details = details[:16]
-		details = details + "..."
-	}
-
-	client.SetActivity(client.Activity{
-		State:      state,
-		Details:    details,
-		LargeImage: aircraft,
-		LargeText:  largetext,
-		SmallImage: "vtolvr",
-		SmallText:  smalltext,
-
-		Timestamps: &client.Timestamps{
-			Start: &currentLobby.Lobby.JoinTime,
-		},
-	})
 
 }
 

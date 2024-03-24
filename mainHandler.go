@@ -17,6 +17,7 @@ func onLobbyJoin(host bool) {
 	currentLobby.Lobby.WinningTeam = "Invalid"
 
 	for {
+
 		currentMessage := <-Message
 
 		currentLobby = updateLobbyCount(currentLobby)
@@ -27,6 +28,7 @@ func onLobbyJoin(host bool) {
 
 		}
 		switch {
+
 		case strings.Contains(currentMessage, "Setting up slot UI: "):
 			currentLobby = onSlotUISetup(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "ilst_"):
@@ -59,7 +61,6 @@ func onLobbyJoin(host bool) {
 		case strings.Contains(currentMessage, ").SetTeam("):
 			currentLobby = onSetTeam(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
-
 			username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
 			craft := ""
 			switch {
@@ -95,7 +96,6 @@ func onLobbyJoin(host bool) {
 				LobbyHistory[x] = currentLobby
 			}
 		}
-		updateRichPresence(currentLobby)
 		done <- true
 
 	}

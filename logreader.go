@@ -5,53 +5,25 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
+
+	"github.com/nxadm/tail"
 )
 
-func tickTime() {
-	for {
-		tick <- true
-		time.Sleep(0 * time.Millisecond)
+func tailLogFile() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Panic(err)
 	}
-}
-
-func readLog() {
-
-	// Start log reading ticker
-	go tickTime()
-
-	/*
-	*Set readlog to false,
-	*prevents unwanted media inputs caused by log being read for first time
-	*when player is already in game and has pressed buttons.
-	 */
-	readlog := true
-
-	// Reads log every tick.
-	for {
-		<-tick
-
-		// Reads log line by line
-		logFile := readLogFile()
-
-		// Appends each log line to a variable.
-		logLinesTmp := strings.Split(logFile, "\r\n")
-
-		// Only takes action on log lines that are new, and ignores old ones.
-		for y, x := range logLinesTmp {
-			if y > (len(logLines) - 1) {
-				if readlog {
-					// Handles new log lines.
-					logHandler(x)
-				}
-
-			}
-		}
-		logLines = logLinesTmp
-
-		// Set to true after the first for loop passes
-		readlog = true
+	t, err := tail.TailFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Slayer.log", tail.Config{Follow: true, ReOpen: true, Poll: true})
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	for x := range t.Lines {
+
+		logHandler(strings.TrimSuffix(x.Text, "\r"))
+	}
+
 }
 
 // Runs the appropriate function depending on the log line contents.
@@ -82,18 +54,4 @@ var InLobby bool
 
 func UpdateStatus(statusType int) {
 	fmt.Println("")
-}
-
-// reads the log file.
-func readLogFile() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Panic(err)
-	}
-	file, err := os.ReadFile(home + "\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player.log")
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return string(file)
 }

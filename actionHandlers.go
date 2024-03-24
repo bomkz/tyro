@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -107,6 +108,9 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var killer string
 	var weapon string
 	var killed string
+	if strings.Contains(currentMessage, "Lobby message from FORDMASTERTECH1: $log_PapaMoose killed EF-24 with GAU-22.") {
+		fmt.Println("bwaaa")
+	}
 	var killedName []string
 	var tmpname string
 	_, trimmedMessage, _ = strings.Cut(currentMessage, "$log_")
@@ -134,6 +138,8 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		Killed: killed,
 	}
 
+	var saved1 bool
+	var saved2 bool
 	for _, y := range killedName {
 		for _, u := range currentLobby.Players {
 			if u.Name == y && u.Active {
@@ -150,6 +156,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	for x, y := range currentLobby.Players {
 		if y.Name == killer && y.Active {
 
+			saved1 = true
 			y.KillCount += 1
 			aircraft = y.Aircraft
 			newKill.UserTeam = y.Team
@@ -166,6 +173,9 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			currentLobby.Players[x] = y
 			break
 		}
+	}
+	if !saved1 {
+		fmt.Println("save1: " + currentMessage)
 	}
 
 	if killedName != nil {
@@ -184,11 +194,15 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 					y.DeathCount += 1
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
+					saved2 = true
 					break
 				}
 			}
 
 		}
+	}
+	if !saved2 {
+		fmt.Println("save2: " + currentMessage)
 	}
 
 	return currentLobby
@@ -410,6 +424,7 @@ func onEnvDeathMC(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			y.Deaths = append(y.Deaths, newDeath)
 			y.DeathCount += 1
 			currentLobby.Players[x] = y
+			break
 		}
 	}
 
