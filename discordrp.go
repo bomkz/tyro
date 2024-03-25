@@ -89,6 +89,7 @@ func updateRichPresence() {
 			details = details + "..."
 		}
 
+		timejoin := time.Unix(currentLobby.Lobby.JoinTime, 0)
 		err := client.SetActivity(client.Activity{
 			State:      state,
 			Details:    details,
@@ -98,7 +99,7 @@ func updateRichPresence() {
 			SmallText:  smalltext,
 
 			Timestamps: &client.Timestamps{
-				Start: &currentLobby.Lobby.JoinTime,
+				Start: &timejoin,
 			},
 		})
 		if err != nil {

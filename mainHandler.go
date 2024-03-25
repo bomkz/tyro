@@ -54,7 +54,7 @@ func onLobbyJoin(host bool) {
 		case currentMessage == "LeaveLobby()":
 			idle()
 			InLobby = false
-			currentLobby.Lobby.LeaveTime = time.Now()
+			currentLobby.Lobby.LeaveTime = time.Now().Unix()
 			for x, y := range LobbyHistory {
 				if y.Lobby.ID == currentLobby.Lobby.ID {
 					LobbyHistory[x] = currentLobby
@@ -90,7 +90,7 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
 		newPlayer := createPlayer(currentPilot, "")
 		currentLobby.Players = append(currentLobby.Players, newPlayer)
-		currentLobby.Lobby.JoinTime = time.Now()
+		currentLobby.Lobby.JoinTime = time.Now().Unix()
 
 		currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name
 	case strings.Contains(currentMessage, "Attempting to join lobby"):
@@ -113,7 +113,7 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.HostID64, _, _ = strings.Cut(ID, ")")
 	case currentMessage == "Connected":
 		currentLobby.Lobby.PreLobby.LoadedIn = true
-		currentLobby.Lobby.JoinTime = time.Now()
+		currentLobby.Lobby.JoinTime = time.Now().Unix()
 	}
 	return currentLobby
 }

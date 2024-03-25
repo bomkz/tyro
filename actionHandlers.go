@@ -55,7 +55,7 @@ func onBeginObjective(currentMessage string, currentLobby LobbyStruct) LobbyStru
 	objectiveName := strings.TrimPrefix(currentMessage, "Setting up objective ")
 	newObjective := ObjectiveStruct{
 		Name:    objectiveName,
-		BeganAt: time.Now(),
+		BeganAt: time.Now().Unix(),
 	}
 	currentLobby.Lobby.Objectives = append(currentLobby.Lobby.Objectives, newObjective)
 	return currentLobby
@@ -66,7 +66,7 @@ func onResetObjective(currentMessage string, currentLobby LobbyStruct) LobbyStru
 	objectiveName := strings.TrimPrefix(currentMessage, "Resetting objective ")
 	newObjective := ObjectiveStruct{
 		Name:    objectiveName,
-		BeganAt: time.Now(),
+		BeganAt: time.Now().Unix(),
 	}
 	currentLobby.Lobby.Objectives = append(currentLobby.Lobby.Objectives, newObjective)
 	return currentLobby
@@ -77,7 +77,7 @@ func onCompleteObjective(currentMessage string, currentLobby LobbyStruct) LobbyS
 	for x, y := range currentLobby.Lobby.Objectives {
 		if y.Name == objectiveName && y.Result == "" {
 			y.Result = "Completed"
-			y.ResultedAt = time.Now()
+			y.ResultedAt = time.Now().Unix()
 			currentLobby.Lobby.Objectives[x] = y
 		}
 	}
@@ -89,7 +89,7 @@ func onFailObjective(currentMessage string, currentLobby LobbyStruct) LobbyStruc
 	for x, y := range currentLobby.Lobby.Objectives {
 		if y.Name == objectiveName && y.Result == "" {
 			y.Result = "Failed"
-			y.ResultedAt = time.Now()
+			y.ResultedAt = time.Now().Unix()
 			currentLobby.Lobby.Objectives[x] = y
 		}
 	}
@@ -130,7 +130,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	weapon, _ = strings.CutSuffix(trimmedMessage, ".")
 	newKill := KillStruct{
 		Weapon: weapon,
-		Time:   time.Now(),
+		Time:   time.Now().Unix(),
 		Killed: killed,
 	}
 
@@ -389,7 +389,7 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 				newDeath.UserTeam = y.Team
 				newDeath.DiedWith = y.Aircraft
 				newDeath.PlayerTeam = "<environment>"
-				newDeath.Time = time.Now()
+				newDeath.Time = time.Now().Unix()
 				currentLobby.Players[x].Deaths = append(currentLobby.Players[x].Deaths, newDeath)
 				currentLobby.Players[x].DeathCount += 1
 			}
@@ -433,7 +433,7 @@ func onEnvDeathMC(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			newDeath.PlayerTeam = "<environment>"
 
 			// Set time of death as time.Now()
-			newDeath.Time = time.Now()
+			newDeath.Time = time.Now().Unix()
 
 			// Append death to death array, and increase player death count.
 			y.Deaths = append(y.Deaths, newDeath)

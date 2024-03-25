@@ -41,26 +41,26 @@ var currentPilot string
 *	Team the Player got a kill against
  */
 type KillStruct struct {
-	Weapon     string    `json:"weapon"`
-	Time       time.Time `json:"time"`
-	Copilot    bool      `json:"copilot"`
-	KilledBy   string    `json:"killedby"`
-	Killed     string    `json:"killed"`
-	KilledName string    `json:"killedbyname"`
-	KilledID   string    `json:"killedbyid"`
-	PlayerTeam string    `json:"playerteam"`
-	UserTeam   string    `json:"userteam"`
+	Weapon     string `json:"weapon"`
+	Time       int64  `json:"time"`
+	Copilot    bool   `json:"copilot"`
+	KilledBy   string `json:"killedby"`
+	Killed     string `json:"killed"`
+	KilledName string `json:"killedbyname"`
+	KilledID   string `json:"killedbyid"`
+	PlayerTeam string `json:"playerteam"`
+	UserTeam   string `json:"userteam"`
 }
 
 type DeathStruct struct {
-	Weapon       string    `json:"weapon"`
-	Time         time.Time `json:"time"`
-	DiedWith     string    `json:"diedwith"`
-	KilledBy     string    `json:"killedby"`
-	KilledByName string    `json:"killedbyname"`
-	KilledByID   string    `json:"killedbyid"`
-	PlayerTeam   string    `json:"playerteam"`
-	UserTeam     string    `json:"userteam"`
+	Weapon       string `json:"weapon"`
+	Time         int64  `json:"time"`
+	DiedWith     string `json:"diedwith"`
+	KilledBy     string `json:"killedby"`
+	KilledByName string `json:"killedbyname"`
+	KilledByID   string `json:"killedbyid"`
+	PlayerTeam   string `json:"playerteam"`
+	UserTeam     string `json:"userteam"`
 }
 
 type LobbyInfoStruct struct {
@@ -73,16 +73,16 @@ type LobbyInfoStruct struct {
 	TotalLobbyKills  int                 `json:"totallobbykills"`
 	TotalLobbyDeaths int                 `json:"totallobbydeaths"`
 	WinningTeam      string              `json:"winningteams"`
-	JoinTime         time.Time           `json:"jointime"`
-	LeaveTime        time.Time           `json:"leavetime"`
+	JoinTime         int64               `json:"jointime"`
+	LeaveTime        int64               `json:"leavetime"`
 	Objectives       []ObjectiveStruct   `json:"objectives"`
 }
 
 type ObjectiveStruct struct {
-	Name       string    `json:"name"`
-	BeganAt    time.Time `json:"beganat"`
-	Result     string    `json:"result"`
-	ResultedAt time.Time `json:"resultedat"`
+	Name       string `json:"name"`
+	BeganAt    int64  `json:"beganat"`
+	Result     string `json:"result"`
+	ResultedAt int64  `json:"resultedat"`
 }
 type LobbyJoinInfoStruct struct {
 	LoadedIn      bool   `json:"loadedin"`
