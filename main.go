@@ -28,16 +28,13 @@ func main() {
 	go startRP()
 	idle()
 
-	// Starts the log reader.
-	//go readLog()
-
 	go tailLogFile()
 
 	waiting := gracefulShutdown(context.Background(), 30*time.Second, map[string]operation{
 		"writefile": func(ctx context.Context) error {
 
 			fmt.Println("Gracefully flushing data to file... Please hold on.")
-			if !idling {
+			if InLobby {
 				Message <- "LeaveLobby()"
 			}
 

@@ -151,5 +151,4 @@ This file is filled with a lot of useful information.
 ! ! TYRO is starting up, please make sure you are currently not spawned in an aircraft if VTOL VR is already running ! !
 ------------------------------------------------------------------------------------------------------
 
-
 `
