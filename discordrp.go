@@ -155,9 +155,9 @@ func getKDR(player LobbyPlayerStruct) (playerkdr string) {
 		playerdint = len(player.Deaths)
 	}
 
-	intpr := len(player.Kills) / playerdint
+	floatpr := float64(len(player.Kills)) / float64(playerdint)
 
-	playerr := fmt.Sprint(intpr)
+	playerr := fmt.Sprint(floatpr)
 
 	playerkdr = playerk + "K/" + playerd + "D/" + playerr + "R"
 
