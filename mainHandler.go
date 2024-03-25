@@ -15,6 +15,7 @@ func onLobbyJoin(host bool) {
 	LobbyHistory = append(LobbyHistory, currentLobby)
 
 	currentLobby.Lobby.WinningTeam = "Invalid"
+	currentLobby.LobbyStructVersion = Version
 
 	for {
 		currentMessage := <-Message

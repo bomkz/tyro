@@ -7,9 +7,10 @@ import (
 )
 
 type LobbyStruct struct {
-	Players []LobbyPlayerStruct `json:"players"`
-	Lobby   LobbyInfoStruct     `json:"lobby"`
-	Slots   []SlotDefineStruct  `json:"slots"`
+	LobbyStructVersion string
+	Players            []LobbyPlayerStruct `json:"players"`
+	Lobby              LobbyInfoStruct     `json:"lobby"`
+	Slots              []SlotDefineStruct  `json:"slots"`
 }
 
 type LobbyPlayerStruct struct {
