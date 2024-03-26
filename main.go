@@ -46,7 +46,6 @@ func main() {
 
 	<-waiting
 
-	fmt.Println("JAMCAT-MACH is now listening to log events.")
 }
 func taintFile() {
 	home, err := os.UserHomeDir()

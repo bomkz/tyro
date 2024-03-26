@@ -16,6 +16,13 @@ func onIlstUpdate(currentMessage string, currentLobby LobbyStruct, host bool) Lo
 	for _, x := range ilst {
 
 		matches, found := separateIlst(x)
+		if !found {
+			continue
+		}
+
+		if strings.Contains(matches[1], "[") {
+			matches[1], _, _ = strings.Cut(matches[1], " [")
+		}
 		if host {
 
 			for x, y := range currentLobby.Players {
@@ -27,9 +34,6 @@ func onIlstUpdate(currentMessage string, currentLobby LobbyStruct, host bool) Lo
 
 			}
 
-		}
-		if !found {
-			continue
 		}
 
 		var foundMatch bool
@@ -127,6 +131,18 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		killedName = append(killedName, killed)
 	}
 
+	if strings.Contains(killed, "[") {
+		killed, _, _ = strings.Cut(killed, " [")
+	}
+	for x, y := range killedName {
+		if strings.Contains(y, "[") {
+			killedName[x], _, _ = strings.Cut(y, " [")
+		}
+	}
+	if strings.Contains(killer, "[") {
+		killed, _, _ = strings.Cut(killed, " [")
+	}
+
 	weapon, _ = strings.CutSuffix(trimmedMessage, ".")
 	newKill := KillStruct{
 		Weapon: weapon,
@@ -177,6 +193,11 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			PlayerTeam:   newKill.UserTeam,
 			UserTeam:     newKill.PlayerTeam,
 		}
+		for x, y := range killedName {
+			if strings.Contains(y, "[") {
+				killedName[x], _, _ = strings.Cut(y, " [")
+			}
+		}
 		for x, y := range currentLobby.Players {
 			for _, h := range killedName {
 				if y.Name == h && y.Active {
@@ -195,6 +216,9 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 
 func onMCSeatOccupy(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	username, aircraft, _ := strings.Cut(currentMessage, " has entered a multicrew seat in ")
+	if strings.Contains(username, "[") {
+		username, _, _ = strings.Cut(username, " [")
+	}
 	craft := ""
 	switch {
 	case strings.Contains(aircraft, "EF-24"):
@@ -245,6 +269,9 @@ func updateLobbyCount(currentLobby LobbyStruct) LobbyStruct {
 func onPlayerLeave(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	trimmedMessage, _ := strings.CutPrefix(currentMessage, "FlightLogger: ")
 	name, _ := strings.CutSuffix(trimmedMessage, " has disconnected.")
+	if strings.Contains(name, "[") {
+		name, _, _ = strings.Cut(name, " [")
+	}
 	for x, y := range currentLobby.Players {
 		if y.Name == name && y.LeftAt.IsZero() {
 			y.LeftAt = time.Now()
@@ -252,6 +279,7 @@ func onPlayerLeave(currentMessage string, currentLobby LobbyStruct) LobbyStruct 
 			currentLobby.Players[x] = y
 		}
 	}
+
 	return currentLobby
 }
 
@@ -295,8 +323,19 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		aircraft = "AH-94"
 	}
 
+	if strings.Contains(username, "[") && !multicrew {
+		username, _, _ = strings.Cut(username, " [")
+	}
+
 	if multicrew {
 		username1, username2, _ := strings.Cut(username, ", ")
+
+		if strings.Contains(username1, "[") {
+			username1, _, _ = strings.Cut(username1, " [")
+		}
+		if strings.Contains(currentMessage, "") {
+			username2, _, _ = strings.Cut(username2, " [")
+		}
 		for x, y := range currentLobby.Players {
 			if y.Name == username1 && y.Active && y.Aircraft != "" {
 				currentLobby.Players[x].Aircraft = aircraft
@@ -339,6 +378,12 @@ func onIdentityUpdate(currentMessage string, currentLobby LobbyStruct) LobbyStru
 		return currentLobby
 	}
 
+	for x, y := range newCrew {
+		if strings.Contains(y, "[") {
+			newCrew[x], _, _ = strings.Cut(y, " [")
+		}
+	}
+
 	// Range over newCrew []string and...
 	for _, y := range newCrew {
 		// Range over currentLobby.Players []LobbyPlayerStruct and...
@@ -370,6 +415,12 @@ func onEnvDeath(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	username, found := matchUsername(currentMessage)
 	if !found {
 		return currentLobby
+	}
+	for x, y := range username {
+		if strings.Contains(y, "[") {
+			username[x], _, _ = strings.Cut(y, " [")
+		}
+
 	}
 
 	unit, found := matchUnit(currentMessage)
@@ -420,6 +471,13 @@ func onEnvDeathMC(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	newDeath.KilledBy = "(" + newDeath.KilledBy
 	newDeath.KilledByName = "<Environment>"
 
+	if strings.Contains(tmpname1, "[") {
+		tmpname1, _, _ = strings.Cut(tmpname1, " [")
+	}
+	if strings.Contains(tmpname2, "[") {
+		tmpname2, _, _ = strings.Cut(tmpname2, " [")
+	}
+
 	// Fill in missing death information using currentLobby.Players information
 	for x, y := range currentLobby.Players {
 		// If x.Name matches either of tmpname1 or tmpname2, and x.Active is true, then.
@@ -459,6 +517,11 @@ func onSlotUISetup(currentMessage string, currentLobby LobbyStruct) LobbyStruct 
 		return currentLobby
 	}
 
+	for x, y := range player {
+		if strings.Contains(y, "[") {
+			player[x], _, _ = strings.Cut(y, " [")
+		}
+	}
 	var team string
 
 	if strings.Contains(currentMessage, "Allied") {

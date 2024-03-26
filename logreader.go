@@ -14,7 +14,7 @@ func tailLogFile() {
 	if err != nil {
 		log.Panic(err)
 	}
-	t, err := tail.TailFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player.log", tail.Config{Follow: true, ReOpen: true, Poll: true})
+	t, err := tail.TailFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player-prev.log", tail.Config{Follow: true, ReOpen: true, Poll: true})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func logHandler(newline string) bool {
 		if strings.Contains(newline, "Creating a lobby for ") {
 			host = true
 		}
-		go onLobbyJoin(host)
+		go onLobbyJoin(host, false, LobbyStruct{})
 		InLobby = true
 		Message <- newline
 		<-done

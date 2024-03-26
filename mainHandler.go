@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-func onLobbyJoin(host bool) {
+func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 
 	var currentLobby LobbyStruct
 
@@ -16,6 +17,18 @@ func onLobbyJoin(host bool) {
 
 	currentLobby.Lobby.WinningTeam = "Invalid"
 	currentLobby.LobbyStructVersion = Version
+	if transition {
+		currentLobby.Lobby.HostID64 = oldLobby.Lobby.HostID64
+		currentLobby.Lobby.HostName = oldLobby.Lobby.HostName
+		currentLobby.Lobby.Name = oldLobby.Lobby.Name
+		currentLobby.Lobby.PreLobby.JoinAttempted = true
+		currentLobby.Lobby.PreLobby.LobbyInfo = oldLobby.Lobby.PreLobby.LobbyInfo
+		currentLobby.Lobby.ID64 = oldLobby.Lobby.ID64
+		currentLobby.Lobby.PreLobby.ScenarioInfo = oldLobby.Lobby.PreLobby.ScenarioInfo
+		currentLobby.Lobby.PreLobby.LoadedIn = true
+		done <- true
+
+	}
 
 	for {
 		currentMessage := <-Message
@@ -52,7 +65,21 @@ func onLobbyJoin(host bool) {
 			currentLobby = onSetTeam(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
 			currentLobby = onMCSeatOccupy(currentMessage, currentLobby)
+		case strings.Contains(currentMessage, "- Transitioning to new mission:"):
+			idle()
+			currentLobby.Lobby.LeaveTime = time.Now().Unix()
+			for x, y := range LobbyHistory {
+				if y.Lobby.ID == currentLobby.Lobby.ID {
+					LobbyHistory[x] = currentLobby
+
+					defer onTransition(currentLobby, host, strings.TrimPrefix(currentMessage, "- Transitioning to new mission: "))
+					return
+				}
+			}
 		case currentMessage == "LeaveLobby()":
+			lobbies := LobbyHistory
+
+			fmt.Println(lobbies)
 			idle()
 			InLobby = false
 			currentLobby.Lobby.LeaveTime = time.Now().Unix()
@@ -73,6 +100,13 @@ func onLobbyJoin(host bool) {
 		done <- true
 
 	}
+}
+
+func onTransition(currentLobby LobbyStruct, host bool, currentMessage string) {
+
+	currentLobby.Lobby.PreLobby.ScenarioInfo = currentMessage
+	go onLobbyJoin(host, true, currentLobby)
+
 }
 
 /*
@@ -101,6 +135,9 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.ID64, name, _ = strings.Cut(currentLobby.Lobby.PreLobby.LobbyInfo, " (")
 		currentLobby.Lobby.ID64 = strings.TrimPrefix(currentLobby.Lobby.ID64, "VTMPMainMenu: Attempting to join lobby ")
 		currentLobby.Lobby.Name, _ = strings.CutSuffix(name, ")")
+		if strings.Contains(currentLobby.Lobby.Name, "24/7 BVR") && strings.Contains(currentLobby.Lobby.Name, " (") {
+			currentLobby.Lobby.Name, _, _ = strings.Cut(currentLobby.Lobby.Name, " (")
+		}
 	case strings.Contains(currentMessage, "Join request accepted!"):
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
 	case strings.Contains(currentMessage, "Launching Multiplayer game for "):
