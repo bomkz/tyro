@@ -10,6 +10,7 @@ import (
 func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 
 	var currentLobby LobbyStruct
+	idling = false
 
 	currentLobby.Lobby.ID = uuid.New()
 	LobbyHistory = append(LobbyHistory, currentLobby)
@@ -25,6 +26,8 @@ func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 		currentLobby.Lobby.ID64 = oldLobby.Lobby.ID64
 		currentLobby.Lobby.PreLobby.ScenarioInfo = oldLobby.Lobby.PreLobby.ScenarioInfo
 		currentLobby.Lobby.PreLobby.LoadedIn = true
+		currentLobby.Lobby.PreLobby.JoinReqStatus = true
+
 		done <- true
 
 	}
