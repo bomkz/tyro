@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -77,9 +76,6 @@ func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 				}
 			}
 		case currentMessage == "LeaveLobby()":
-			lobbies := LobbyHistory
-
-			fmt.Println(lobbies)
 			idle()
 			InLobby = false
 			currentLobby.Lobby.LeaveTime = time.Now().Unix()
