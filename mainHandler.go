@@ -65,7 +65,6 @@ func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 		case strings.Contains(currentMessage, "has entered a multicrew seat in"):
 			currentLobby = onMCSeatOccupy(currentMessage, currentLobby)
 		case strings.Contains(currentMessage, "- Transitioning to new mission:"):
-			idle()
 			currentLobby.Lobby.LeaveTime = time.Now().Unix()
 			for x, y := range LobbyHistory {
 				if y.Lobby.ID == currentLobby.Lobby.ID {
@@ -133,6 +132,7 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.Name, _ = strings.CutSuffix(name, ")")
 		if strings.Contains(currentLobby.Lobby.Name, "24/7 BVR") && strings.Contains(currentLobby.Lobby.Name, " (") {
 			currentLobby.Lobby.Name, _, _ = strings.Cut(currentLobby.Lobby.Name, " (")
+			currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name
 		}
 	case strings.Contains(currentMessage, "Join request accepted!"):
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
