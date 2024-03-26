@@ -27,6 +27,7 @@ func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 		currentLobby.Lobby.PreLobby.ScenarioInfo = oldLobby.Lobby.PreLobby.ScenarioInfo
 		currentLobby.Lobby.PreLobby.LoadedIn = true
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
+		currentLobby.Lobby.JoinTime = time.Now().Unix()
 
 		done <- true
 
@@ -124,7 +125,6 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		newPlayer := createPlayer(currentPilot, "")
 		currentLobby.Players = append(currentLobby.Players, newPlayer)
 		currentLobby.Lobby.JoinTime = time.Now().Unix()
-
 		currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name
 	case strings.Contains(currentMessage, "Attempting to join lobby"):
 		var name string

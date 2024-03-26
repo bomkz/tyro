@@ -57,12 +57,16 @@ func updateRichPresence() {
 
 		state := playerkdr + "-" + "Objectives: " + countObjectives(currentLobby)
 
-		details := currentLobby.Lobby.PreLobby.ScenarioInfo
+		details := currentLobby.Lobby.Name
 
 		var aircraft string
 		var smalltext string
 		largetext := "Currently flying: "
 		switch player.Aircraft {
+		default:
+			largetext += "None"
+			aircraft = "vtolvr"
+			smalltext = "God help my nonexistent sanity"
 		case "EF-24G":
 			largetext += "EF-24G Mischief"
 			aircraft = "ef24g"
