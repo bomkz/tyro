@@ -51,17 +51,22 @@ func checkIfUserExists(matches []string, currentLobby LobbyStruct) (userExists b
 
 	id := matches[0]
 	username := matches[1]
+	team := matches[2]
 
 	var foundUser bool
 	for x, y := range currentLobby.Players {
-		if y.Name == username && y.ID64 == id && !y.InGame {
+		if y.Name == username && y.ID64 == id && !y.InGame && y.Team == team {
 			foundUser = true
 
 			y.InGame = true
 			currentLobby.Players[x] = y
-		} else if y.Name == username && y.ID64 == id && y.InGame {
+		} else if y.Name == username && y.ID64 == id && y.InGame && y.Team == team {
 
 			foundUser = true
+		}
+
+		if y.Name == username && y.ID64 == id && y.Team != team {
+			currentLobby.Players[x].Active = false
 		}
 	}
 
@@ -73,14 +78,14 @@ func checkIfUserExists(matches []string, currentLobby LobbyStruct) (userExists b
 
 }
 
-func createPlayer(username string, id64 string) LobbyPlayerStruct {
+func createPlayer(username string, id64 string, team string) LobbyPlayerStruct {
 
 	newPlayer := LobbyPlayerStruct{
 		Name:     username,
 		JoinedAt: time.Now(),
 		Active:   true,
 		InGame:   true,
-		Team:     "Allied",
+		Team:     team,
 		ID64:     id64,
 	}
 

@@ -39,6 +39,7 @@ func onLobbyJoin(host bool, transition bool, oldLobby LobbyStruct) {
 		if !currentLobby.Lobby.PreLobby.LoadedIn {
 			currentLobby = preLobbyHandler(currentMessage, currentLobby, host)
 		}
+
 		switch {
 		case strings.Contains(currentMessage, "Setting up slot UI: "):
 			currentLobby = onSlotUISetup(currentMessage, currentLobby)
@@ -122,7 +123,7 @@ func preLobbyHandler(currentMessage string, currentLobby LobbyStruct, host bool)
 		currentLobby.Lobby.Name, _ = matchHostedMap(currentMessage)
 		currentLobby.Lobby.PreLobby.JoinAttempted = true
 		currentLobby.Lobby.PreLobby.JoinReqStatus = true
-		newPlayer := createPlayer(currentPilot, "")
+		newPlayer := createPlayer(currentPilot, "", "Allied")
 		currentLobby.Players = append(currentLobby.Players, newPlayer)
 		currentLobby.Lobby.JoinTime = time.Now().Unix()
 		currentLobby.Lobby.PreLobby.ScenarioInfo = currentLobby.Lobby.Name

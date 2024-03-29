@@ -43,7 +43,7 @@ func onIlstUpdate(currentMessage string, currentLobby LobbyStruct, host bool) Lo
 		if foundMatch {
 			continue
 		}
-		newPlayer := createPlayer(matches[1], matches[0])
+		newPlayer := createPlayer(matches[1], matches[0], matches[2])
 
 		currentLobby.Players = append(currentLobby.Players, newPlayer)
 	}
@@ -202,6 +202,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			for _, h := range killedName {
 				if y.Name == h && y.Active {
 					y.DeathCount += 1
+					newDeath.DiedWith = y.Aircraft
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
 					break
@@ -300,6 +301,11 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var multicrew bool
 	if strings.Contains(username, ",") {
 		multicrew = true
+	}
+
+	if strings.Contains(username, "(") {
+		_, username, _ = strings.Cut(username, "(")
+		username, _, _ = strings.Cut(username, ")")
 	}
 
 	if !found {
