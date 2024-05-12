@@ -1,5 +1,7 @@
 # TYRO
  Telemetry Yield Real-time Observations
+ Custom Discord rich presence plugin, that also plays kill, killstreak, and humiliation SFX, as well as saves all the statistics of any lobby you join.
+ 
 ## Installation
 (NOTE: binaries not available until permission is gotten from image authors, until then, you can build your own, except you'll have to use your own images)
 Download precompiled binaries off the release tab in Github, or if you're ✨special✨, spend the next hour and a half trying to figure out why it is not compiling on your side. (looking at you, future me)
