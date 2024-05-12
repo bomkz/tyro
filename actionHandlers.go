@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -162,10 +163,13 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		}
 	}
 
+	PlayerKilling := false
+	AlivePlayer := LobbyPlayerStruct{}
 	var aircraft string
 	var killerid string
 	for x, y := range currentLobby.Players {
 		if y.Name == killer && y.Active {
+			PlayerKilling = true
 			y.KillCount += 1
 			aircraft = y.Aircraft
 			newKill.UserTeam = y.Team
@@ -180,6 +184,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 			newKill.Copilot = y.Copilot
 			y.Kills = append(y.Kills, newKill)
 			currentLobby.Players[x] = y
+			AlivePlayer = y
 			break
 		}
 	}
@@ -198,6 +203,10 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 				killedName[x], _, _ = strings.Cut(y, " [")
 			}
 		}
+
+		PlayerKilled := false
+		DeadPlayer := LobbyPlayerStruct{}
+
 		for x, y := range currentLobby.Players {
 			for _, h := range killedName {
 				if y.Name == h && y.Active {
@@ -205,11 +214,20 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 					newDeath.DiedWith = y.Aircraft
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
+					PlayerKilled = true
+					DeadPlayer = y
 					break
 				}
 			}
 
 		}
+
+		if PlayerKilled && PlayerKilling {
+			if AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "GUN" {
+				fmt.Println("HUMILIATED")
+			}
+		}
+
 	}
 
 	return currentLobby
