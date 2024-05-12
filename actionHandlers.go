@@ -2,8 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/wav"
 )
 
 func onIlstUpdate(currentMessage string, currentLobby LobbyStruct, host bool) LobbyStruct {
@@ -116,6 +121,7 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 	var tmpname string
 	_, trimmedMessage, _ = strings.Cut(currentMessage, "$log_")
 	killer, trimmedMessage, _ = strings.Cut(trimmedMessage, " killed ")
+
 	if strings.Contains(currentMessage, "(") {
 
 		killed, trimmedMessage, _ = strings.Cut(trimmedMessage, " (")
@@ -205,7 +211,6 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		}
 
 		PlayerKilled := false
-		DeadPlayer := LobbyPlayerStruct{}
 
 		for x, y := range currentLobby.Players {
 			for _, h := range killedName {
@@ -215,17 +220,25 @@ func onKill(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 					y.Deaths = append(y.Deaths, newDeath)
 					currentLobby.Players[x] = y
 					PlayerKilled = true
-					DeadPlayer = y
 					break
 				}
 			}
 
 		}
 
-		if PlayerKilled && PlayerKilling {
-			if AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "GUN" {
-				fmt.Println("HUMILIATED")
+		if config.SFX {
+			if PlayerKilled && PlayerKilling {
+
+				if AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "GUN" || AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "Vulcan" || AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "M62" || AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Weapon == "M62 Vulcan" {
+					if strings.Contains(AlivePlayer.Aircraft, "55") && (strings.Contains(AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Killed, "45") || strings.Contains(AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Killed, "26")) {
+						playHumiliated()
+					}
+					if AlivePlayer.Aircraft == "24" && AlivePlayer.Kills[len(AlivePlayer.Kills)-1].Killed != "94" {
+						playHumiliated()
+					}
+				}
 			}
+
 		}
 
 	}
@@ -330,6 +343,41 @@ func onSetTeam(currentMessage string, currentLobby LobbyStruct) LobbyStruct {
 		return currentLobby
 	}
 
+	enemy := strings.HasSuffix(currentMessage, "(Enemy)")
+	allied := strings.HasSuffix(currentMessage, "(Allied)")
+	var team string
+	if allied {
+		team = "Allied"
+	} else if enemy {
+		team = "Enemy"
+	}
+	for x, y := range currentLobby.Players {
+		if y.Name == username && y.Active {
+			if y.Team != team {
+				y.Active = false
+				currentLobby.Players[x] = y
+				foundPlayerTeam := false
+				for z, u := range currentLobby.Players {
+					if u.Name == username && u.Team == team {
+						u.Active = true
+						currentLobby.Players[z] = u
+						foundPlayerTeam = true
+					}
+				}
+				if !foundPlayerTeam {
+					var newPlayer = LobbyPlayerStruct{
+						Name:     y.Name,
+						ID64:     y.ID64,
+						JoinedAt: time.Now(),
+						InGame:   true,
+						Active:   true,
+						Team:     team,
+					}
+					currentLobby.Players = append(currentLobby.Players, newPlayer)
+				}
+			}
+		}
+	}
 	var aircraft string
 
 	switch {
@@ -565,4 +613,28 @@ func onSlotUISetup(currentMessage string, currentLobby LobbyStruct) LobbyStruct 
 	}
 
 	return currentLobby
+}
+
+func playHumiliated() {
+	f, err := os.Open("soundAssets/humiliation.wav")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer f.Close()
+	streamer, format, err := wav.Decode(f)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer streamer.Close()
+
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	done := make(chan bool)
+
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		done <- true
+	})))
+	<-done
 }

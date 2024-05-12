@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -14,7 +13,7 @@ func tailLogFile() {
 	if err != nil {
 		log.Panic(err)
 	}
-	t, err := tail.TailFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Player.log", tail.Config{Follow: true, ReOpen: true, Poll: true})
+	t, err := tail.TailFile(home+"\\AppData\\LocalLow\\Boundless Dynamics, LLC\\VTOLVR\\Slayer.log", tail.Config{Follow: true, ReOpen: true, Poll: true})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +51,3 @@ func logHandler(newline string) bool {
 }
 
 var InLobby bool
-
-func UpdateStatus(statusType int) {
-	fmt.Println("")
-}

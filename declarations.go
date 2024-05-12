@@ -1,10 +1,14 @@
 package main
 
 import (
+	"embed"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+//go:embed soundAssets/humiliation.wav
+var embeds embed.FS
 
 type LobbyStruct struct {
 	LobbyStructVersion string

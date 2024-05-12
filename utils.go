@@ -60,6 +60,7 @@ func checkIfUserExists(matches []string, currentLobby LobbyStruct) (userExists b
 
 			y.InGame = true
 			currentLobby.Players[x] = y
+
 		} else if y.Name == username && y.ID64 == id && y.InGame && y.Team == team {
 
 			foundUser = true
@@ -67,6 +68,7 @@ func checkIfUserExists(matches []string, currentLobby LobbyStruct) (userExists b
 
 		if y.Name == username && y.ID64 == id && y.Team != team {
 			currentLobby.Players[x].Active = false
+
 		}
 	}
 

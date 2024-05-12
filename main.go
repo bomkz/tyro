@@ -17,7 +17,15 @@ import (
 var Version = "0.0"
 
 func main() {
+	var err error
 	fmt.Print(info)
+	config, err = readOrCreateConfig("config.json")
+	if err != nil {
+		panic(err)
+	}
+
+	ensureSFXExists()
+
 	uc := updatechecker.New("angelfluffyookami", "tyro", "Tyro", "https://github.com/angelfluffyookami/tyro/releases/latest", 0, true)
 	uc.CheckForUpdate(Version)
 	uc.PrintMessage()
