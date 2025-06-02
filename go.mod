@@ -1,4 +1,4 @@
-module github.com/angelfluffyookami/tyro
+module github.com/bomkz/tyro
 
 go 1.22.1
 
